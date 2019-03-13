@@ -6,7 +6,7 @@ struct item {
     item() {}
     item(int mx, int ind = 0): mx(mx), ind(ind), sm(0) {}
 
-    int ask() {
+    auto ask() {
         return mx + sm;
     }
 
