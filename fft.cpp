@@ -1,6 +1,10 @@
-long double eps = 1e-12;
-long double pi = 3.14159265358979323;
+const long double eps = 1e-12;
+const long double pi = 3.14159265358979323;
 
+// when using big integers mod = 10000 works better than 100000 and bigger;
+// using Complex = complex< long double >;  // slower than my Complex
+
+namespace fft {
 struct Complex {
     long double x, y;
 
@@ -27,7 +31,7 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
     if (!good) {
         int p2 = 1;
         while (p2 < v.size()) {
-            p2 *= 2;
+            p2 <<= 1;
         }
         v.resize(p2);
         for (int i = v.size(); i < p2; ++i) {
@@ -41,14 +45,13 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
     vector< Complex > v1(n * 2);
     int k = 0, n1 = 2 * n;
     while (n1 > 1) {
-        n1 /= 2;
+        n1 >>= 1;
         ++k;
     }
     vector< Complex > w(2 * n);
     w[0] = 1;
-    w[1] = Complex(cos(pi / n), sin(pi / n));
+    w[1] = Complex(cosl(pi / n), sinl(pi / n));
     for (int i = 2; i < 2 * n; ++i) {
-        // w[i] = Complex(cos(pi * i / n), sin(pi * i / n));
         if (i >= n) {
             w[i] = -w[i - n];
         } else {
@@ -61,14 +64,10 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
     for (int i = 1; i < k; ++i) {
         int z = (1 << i);
         for (int j = 0; j < z; ++j) {
-            // cout << id << ' ' << z << ' ' << ind[id - z] << ' ' << i << ' ' << k << '\n';
             ind[id] = (ind[id - z]) + (1 << (k - 1 - i));
             ++id;
-            // print(ind);
-            // cout << id << endl;
         }
     }
-    // print(ind);
     for (int i = 0; i < 2 * n; ++i) {
         v1[i] = Complex(v[ind[i]]);
     }
@@ -88,23 +87,24 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
     return v1;
 }
 
-vector< long double > operator * (vector< long double >& a, vector< long double >& b) {
-    if (a.size() <= 2 || b.size() <= 2) {
-        vector< long double > c(a.size() + b.size() - 1, 0);
-        for (int i = 0; i < a.size(); ++i) {
-            for (int j = 0; j < b.size(); ++j) {
-                c[i + j] += a[i] * b[j];
-            }
-        }
-        while (c.size() > 0 && c.back() == 0) {
-            c.pop_back();
-        }
-        return c;
-    }
+template< typename T >
+vector< T > multiply(vector< T >& a, vector< T >& b) {
+    // if (a.size() <= 2 || b.size() <= 2) {
+    //     vector< T > c(a.size() + b.size() - 1, 0);
+    //     for (int i = 0; i < a.size(); ++i) {
+    //         for (int j = 0; j < b.size(); ++j) {
+    //             c[i + j] += a[i] * b[j];
+    //         }
+    //     }
+    //     while (c.size() > 0 && c.back() == 0) {
+    //         c.pop_back();
+    //     }
+    //     return c;
+    // }
     int k = a.size() + b.size() - 1;
     int p2 = 1;
     while (p2 < k) {
-        p2 *= 2;
+        p2 <<= 1;
     }
     int oldasize = a.size();
     int oldbsize = b.size();
@@ -122,11 +122,15 @@ vector< long double > operator * (vector< long double >& a, vector< long double 
         va[i] = va[i] * vb[i];
     }
     vector< Complex > ansC = fft(va, true);
-    vector< long double > ans(n);
+    vector< T > ans(n);
     for (int i = 0; i < n; ++i) {
-        ans[i] = ansC[i].x / (1.0 * n);
-        if (ans[i] < eps) {
-            ans[i] = 0;
+        if (typeid(T) == typeid(int) || typeid(T) == typeid(long long)) {
+            ans[i] = (long long)round(ansC[i].x / (long double)(1.0 * n));  // if T is int
+        } else {
+            ans[i] = ansC[i].x / (1.0 * n);  // if T is real
+            if (ans[i] < eps) {
+                ans[i] = 0;
+            }
         }
     }
     for (int i = 1; i <= n / 2; ++i) {
@@ -137,3 +141,40 @@ vector< long double > operator * (vector< long double >& a, vector< long double 
     }
     return ans;
 }
+
+template< typename T >
+void square(vector< T >& a) {
+    int k = a.size() * 2 - 1;
+    int p2 = 1;
+    while (p2 < k) {
+        p2 *= 2;
+    }
+    int oldasize = a.size();
+    a.resize(p2);
+    for (int i = oldasize; i < p2; ++i) {
+        a[i] = 0;
+    }
+    int n = p2;
+    vector< Complex > va = fft(a, true);
+    for (int i = 0; i < n; ++i) {
+        va[i] = va[i] * va[i];
+    }
+    vector< Complex > ansC = fft(va, true);
+    for (int i = 0; i < n; ++i) {
+        if (typeid(T) == typeid(int) || typeid(T) == typeid(long long)) {
+            a[i] = (long long)round(ansC[i].x / (long double)(1.0 * n));  // if T is int
+        } else {
+            a[i] = ansC[i].x / (1.0 * n);  // if T is real
+            if (a[i] < eps) {
+                a[i] = 0;
+            }
+        }
+    }
+    for (int i = 1; i <= n / 2; ++i) {
+        swap(a[i], a[n - i]);
+    }
+    while (a.size() > 0 && a.back() == 0) {
+        a.pop_back();
+    }
+}
+}  // fft
