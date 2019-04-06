@@ -17,17 +17,17 @@ item operator + (item a, item b) {
 }
 
 struct segtree {
-    vector< item > tree;
+    vector<item> tree;
     int n;
 
     segtree(int size) : n(size), tree(size * 4, item()) {}
-    template< typename InType >
-    segtree(vector< InType >& v) : n(v.size()), tree(v.size() * 4) {
+    template<typename InType>
+    segtree(vector<InType>& v) : n(v.size()), tree(v.size() * 4) {
         build(v, 0, 0, n - 1);
     }
 
-    template< typename InType >
-    void build(vector< InType >& v, int i, int l, int r) {
+    template<typename InType>
+    void build(vector<InType>& v, int i, int l, int r) {
         if (l == r) {
             tree[i] = item(v[l], l, l);
             return;
@@ -38,7 +38,7 @@ struct segtree {
         tree[i] = tree[2 * i + 1] + tree[2 * i + 2];
     }
 
-    template< typename InType >
+    template<typename InType>
     void set(int ind, InType k, int i, int vl, int vr) {
         if (vl == vr) {
             tree[i].value = k - tree[i].mod_sm;
@@ -50,12 +50,12 @@ struct segtree {
         tree[i].value = (tree[2 * i + 1] + tree[2 * i + 2]).value;
     }
 
-    template< typename InType >
+    template<typename InType>
     void set(int ind, InType k) {
         set(ind, k, 0, 0, n - 1);
     }
 
-    template< typename InType >
+    template<typename InType>
     void add(int l, int r, InType k, int i, int vl, int vr) {
         if (l == vl && r == vr) {
             tree[i].mod_sm += k;
@@ -71,7 +71,7 @@ struct segtree {
         tree[i].value = (tree[2 * i + 1] + tree[2 * i + 2]).value;
     }
 
-    template< typename InType >
+    template<typename InType>
     void add(int l, int r, InType k) {
         add(l, r, k, 0, 0, n - 1);
     }

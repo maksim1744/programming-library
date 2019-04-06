@@ -34,10 +34,13 @@ item operator + (item a, item b) {
 }
 
 struct segtree {
-    vector< item > tree;
+    vector<item> tree;
     int n;
 
-    segtree(int size) : n(size), tree(size * 4, item()) {}
+    segtree(int size) : n(size), tree(size * 4, item()) {
+        vector<decltype(item().mx)> v(n, 0);
+        build(v, 0, 0, n - 1);
+    }
     template< typename InType >
     segtree(vector< InType >& v) : n(v.size()), tree(v.size() * 4) {
         build(v, 0, 0, n - 1);
