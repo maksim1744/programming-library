@@ -19,21 +19,22 @@ long long max_flow_dinic(vector<vector<pair<int, long long>>> g_main, int s, int
     }
     long long flow = 0;
     vector<int> layer(n, -5);
-    queue<int> q;
+    vector<int> q(n + 10);
+    int ql, qr;
     vector<int> ptr(n, 0);
-    vector<int> to(n);
     for (int i = 0; i < n; ++i) {
         layer.assign(n, -5);
         ptr.assign(n, 0);
-        q.push(s);
+        ql = 0;
+        qr = 1;
+        q[0] = s;
         layer[s] = 0;
-        while (!q.empty()) {
-            int v = q.front();
-            q.pop();
+        while (ql < qr) {
+            int v = q[ql++];
             for (auto k : g[v]) {
                 if (e[k].mx > 0 && layer[e[k].to] == -5) {
                     layer[e[k].to] = layer[v] + 1;
-                    q.push(e[k].to);
+                    q[qr++] = e[k].to;
                 }
             }
         }
@@ -41,34 +42,30 @@ long long max_flow_dinic(vector<vector<pair<int, long long>>> g_main, int s, int
             break;
         long long prev_flow = flow;
         while (true) {
-            function<bool(int)> go = [&](int v) {
+            function<long long(int, long long)> go = [&](int v, long long now) -> long long {
                 if (v == t)
-                    return true;
+                    return now;
                 while (ptr[v] < g[v].size()) {
-                    if (layer[v] + 1 == layer[e[g[v][ptr[v]]].to] && e[g[v][ptr[v]]].mx > 0 && go(e[g[v][ptr[v]]].to)) {
-                        to[v] = ptr[v];
-                        return true;
+                    if (layer[v] + 1 == layer[e[g[v][ptr[v]]].to] && e[g[v][ptr[v]]].mx > 0) {
+                        long long next = min(now, e[g[v][ptr[v]]].mx);
+                        long long x = go(e[g[v][ptr[v]]].to, next);
+                        if (x > 0) {
+                            e[g[v][ptr[v]]].mx -= x;
+                            e[g[v][ptr[v]]^1].mx += x;
+                            return x;
+                        } else {
+                            ++ptr[v];
+                        }
                     } else {
                         ++ptr[v];
                     }
                 }
-                return false;
+                return 0;
             };
-            if (!go(s))
+            long long el_flow = go(s, 1e9l * 1e9l * 4l);
+            if (el_flow == 0)
                 break;
-            int v = s;
-            long long mn = 1e9l;
-            while (v != t) {
-                mn = min(mn, e[g[v][to[v]]].mx);
-                v = e[g[v][to[v]]].to;
-            }
-            v = s;
-            while (v != t) {
-                e[g[v][to[v]]].mx -= mn;
-                e[g[v][to[v]]^1].mx += mn;
-                v = e[g[v][to[v]]].to;
-            }
-            flow += mn;
+            flow += el_flow;
         }
         if (flow == prev_flow)
             break;
