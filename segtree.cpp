@@ -1,15 +1,15 @@
 using T = int;
 
 struct segtree {
-    vector< T > tree;
+    vector<T> tree;
     int n;
 
     segtree(int size) : n(size), tree(size * 4, T()) {}
-    segtree(vector< T >& v) : n(v.size()), tree(v.size() * 4) {
+    segtree(vector<T>& v) : n(v.size()), tree(v.size() * 4) {
         build(v, 0, 0, n - 1);
     }
 
-    void build(vector< T >& v, int i, int l, int r) {
+    void build(vector<T>& v, int i, int l, int r) {
         if (l == r) {
             tree[i] = v[l];
             return;

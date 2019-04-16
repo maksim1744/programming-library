@@ -2,7 +2,7 @@ const long double eps = 1e-12;
 const long double pi = 3.14159265358979323;
 
 // when using big integers mod = 10000 works better than 100000 and bigger;
-// using Complex = complex< long double >;  // slower than my Complex
+// using Complex = complex<long double>;  // slower than my Complex
 
 namespace fft {
 struct Complex {
@@ -26,8 +26,8 @@ Complex operator * (Complex& a, Complex& b) {
     return Complex(a.x * b.x - a.y * b.y, a.x * b.y + b.x * a.y);
 }
 
-template< typename T >
-vector< Complex > fft(vector< T >& v, bool good = false) {
+template<typename T>
+vector<Complex> fft(vector<T>& v, bool good = false) {
     if (!good) {
         int p2 = 1;
         while (p2 < v.size()) {
@@ -39,16 +39,16 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
         }
     }
     if (v.size() == 1) {
-        return vector< Complex > {Complex(v[0])};
+        return vector<Complex> {Complex(v[0])};
     }
     int n = v.size() / 2;
-    vector< Complex > v1(n * 2);
+    vector<Complex> v1(n * 2);
     int k = 0, n1 = 2 * n;
     while (n1 > 1) {
         n1 >>= 1;
         ++k;
     }
-    vector< Complex > w(2 * n);
+    vector<Complex> w(2 * n);
     w[0] = 1;
     w[1] = Complex(cosl(pi / n), sinl(pi / n));
     for (int i = 2; i < 2 * n; ++i) {
@@ -58,7 +58,7 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
             w[i] = w[i / 2] * w[i - i / 2];
         }
     }
-    vector< int > ind(2 * n, 0);
+    vector<int> ind(2 * n, 0);
     ind[1] = 1 << (k - 1);
     int id = 2;
     for (int i = 1; i < k; ++i) {
@@ -77,8 +77,8 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
         int k1 = sz / 2 - 1;
         for (int j = 0; j < cnt; ++j) {
             int k2 = sz * j;
-            vector< Complex > va(v1.begin() + sz * j, v1.begin() + sz * j + sz / 2);
-            vector< Complex > vb(v1.begin() + sz * j + sz / 2, v1.begin() + sz * j + sz);
+            vector<Complex> va(v1.begin() + sz * j, v1.begin() + sz * j + sz / 2);
+            vector<Complex> vb(v1.begin() + sz * j + sz / 2, v1.begin() + sz * j + sz);
             for (int u = 0; u < sz; ++u) {
                 v1[k2 + u] = va[u & k1] + w[u << i] * vb[u & k1];
             }
@@ -87,10 +87,10 @@ vector< Complex > fft(vector< T >& v, bool good = false) {
     return v1;
 }
 
-template< typename T >
-vector< T > multiply(vector< T >& a, vector< T >& b) {
+template<typename T>
+vector<T> multiply(vector<T>& a, vector<T>& b) {
     // if (a.size() <= 2 || b.size() <= 2) {
-    //     vector< T > c(a.size() + b.size() - 1, 0);
+    //     vector<T> c(a.size() + b.size() - 1, 0);
     //     for (int i = 0; i < a.size(); ++i) {
     //         for (int j = 0; j < b.size(); ++j) {
     //             c[i + j] += a[i] * b[j];
@@ -117,12 +117,12 @@ vector< T > multiply(vector< T >& a, vector< T >& b) {
         b[i] = 0;
     }
     int n = p2;
-    vector< Complex > va = fft(a, true), vb = fft(b, true);
+    vector<Complex> va = fft(a, true), vb = fft(b, true);
     for (int i = 0; i < n; ++i) {
         va[i] = va[i] * vb[i];
     }
-    vector< Complex > ansC = fft(va, true);
-    vector< T > ans(n);
+    vector<Complex> ansC = fft(va, true);
+    vector<T> ans(n);
     for (int i = 0; i < n; ++i) {
         if (typeid(T) == typeid(int) || typeid(T) == typeid(long long)) {
             ans[i] = (long long)round(ansC[i].x / (long double)(1.0 * n));  // if T is int
@@ -142,8 +142,8 @@ vector< T > multiply(vector< T >& a, vector< T >& b) {
     return ans;
 }
 
-template< typename T >
-void square(vector< T >& a) {
+template<typename T>
+void square(vector<T>& a) {
     int k = a.size() * 2 - 1;
     int p2 = 1;
     while (p2 < k) {
@@ -155,11 +155,11 @@ void square(vector< T >& a) {
         a[i] = 0;
     }
     int n = p2;
-    vector< Complex > va = fft(a, true);
+    vector<Complex> va = fft(a, true);
     for (int i = 0; i < n; ++i) {
         va[i] = va[i] * va[i];
     }
-    vector< Complex > ansC = fft(va, true);
+    vector<Complex> ansC = fft(va, true);
     for (int i = 0; i < n; ++i) {
         if (typeid(T) == typeid(int) || typeid(T) == typeid(long long)) {
             a[i] = (long long)round(ansC[i].x / (long double)(1.0 * n));  // if T is int

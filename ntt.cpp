@@ -13,7 +13,7 @@ long long powMod(long long a, long long n, long long mod = mod) {
 }
 
 long long findG(long long mod = mod) {
-    vector< long long > d;
+    vector<long long> d;
     long long n = mod - 1;
     if (!(n & 1)) {
         d.push_back(2);
@@ -52,7 +52,7 @@ long long findG(long long mod = mod) {
     return g;
 }
 
-vector< long long > ntt(vector< long long >& v, bool inv = false) {
+vector<long long> ntt(vector<long long>& v, bool inv = false) {
     if (v.size() == 1) {
         return v;
     }
@@ -64,19 +64,19 @@ vector< long long > ntt(vector< long long >& v, bool inv = false) {
     }
     v.resize(n, 0);
     assert(mod % n == 1);
-    vector< long long > v1(n / 2), v2(n / 2);
+    vector<long long> v1(n / 2), v2(n / 2);
     for (int i = 0; i < n / 2; ++i) {
         v1[i] = v[2 * i];
         v2[i] = v[2 * i + 1];
     }
-    vector< long long > ntt1 = ntt(v1, inv), ntt2 = ntt(v2, inv);
+    vector<long long> ntt1 = ntt(v1, inv), ntt2 = ntt(v2, inv);
     long long w, x = 1;
     if (inv) {
         w = powMod(ginv, (mod - 1) / n, mod);
     } else {
         w = powMod(g, (mod - 1) / n, mod);
     }
-    vector< long long > ans(n);
+    vector<long long> ans(n);
     for (int i = 0; i < n; ++i) {
         ans[i] = (ntt1[i % (n / 2)] + x * ntt2[i % (n / 2)]) % mod;
         x = (x * w) % mod;
@@ -90,27 +90,27 @@ vector< long long > ntt(vector< long long >& v, bool inv = false) {
     return ans;
 }
 
-vector< long long > mul(vector< long long >& a, vector< long long >& b) {
+vector<long long> mul(vector<long long>& a, vector<long long>& b) {
     int n = 1;
     while (n < a.size() + b.size() - 1) {
         n <<= 1;
     }
     a.resize(n, 0);
     b.resize(n, 0);
-    vector< long long > ntta = ntt(a), nttb = ntt(b);
+    vector<long long> ntta = ntt(a), nttb = ntt(b);
     for (int i = 0; i < n; ++i) {
         ntta[i] = ntta[i] * nttb[i] % mod;
     }
     return ntt(ntta, true);
 }
 
-vector< long long > sqr(vector< long long >& a) {
+vector<long long> sqr(vector<long long>& a) {
     int n = 1;
     while (n < a.size() * 2 - 1) {
         n <<= 1;
     }
     a.resize(n, 0);
-    vector< long long > ntta = ntt(a);
+    vector<long long> ntta = ntt(a);
     for (int i = 0; i < n; ++i) {
         ntta[i] = ntta[i] * ntta[i] % mod;
     }

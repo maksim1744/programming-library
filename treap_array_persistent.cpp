@@ -19,7 +19,7 @@ struct treapArNode {
     }
 };
 
-pair< treapArNode*, treapArNode* > split(treapArNode * node, int k);
+pair<treapArNode*, treapArNode*> split(treapArNode * node, int k);
 treapArNode * merge(treapArNode * a, treapArNode * b);
 
 struct treapAr {
@@ -36,9 +36,9 @@ struct treapAr {
 
     int operator[] (int i);
 
-    vector< int > toVector(treapArNode * node);
+    vector<int> toVector(treapArNode * node);
 
-    vector< int > toVector();
+    vector<int> toVector();
 
     void erase(int k);
 
@@ -65,7 +65,7 @@ void print(treapArNode * node, string spaces = "") {
 #endif
 
 struct treaps {
-    vector< treapAr > versions;
+    vector<treapAr> versions;
 
     treaps() {
         versions.emplace_back();
@@ -138,7 +138,7 @@ treapAr::treapAr(treapArNode * _root) {
     root = _root;
 }
 
-pair< treapArNode*, treapArNode* > split(treapArNode * node, int k) {
+pair<treapArNode*, treapArNode*> split(treapArNode * node, int k) {
     if (node == nullptr) {
         return {nullptr, nullptr};
     }
@@ -184,18 +184,18 @@ treapArNode * merge(treapArNode * a, treapArNode * b) {
     }
 }
 
-vector< int > treapAr::toVector(treapArNode * node) {
+vector<int> treapAr::toVector(treapArNode * node) {
     if (node == nullptr) {
-        return vector< int >({});
+        return vector<int>({});
     }
-    vector< int > vLeft = toVector(node->left);
-    vector< int > vRight = toVector(node->right);
+    vector<int> vLeft = toVector(node->left);
+    vector<int> vRight = toVector(node->right);
     vLeft.push_back(node->value);
     vLeft.insert(vLeft.end(), vRight.begin(), vRight.end());
     return vLeft;
 }
 
-vector< int > treapAr::toVector() {
+vector<int> treapAr::toVector() {
     return toVector(root);
 }
 

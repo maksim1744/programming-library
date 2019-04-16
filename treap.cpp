@@ -25,14 +25,14 @@ struct treap {
     treap() {
         rnd = mt19937(chrono::steady_clock::now().time_since_epoch().count());
     }
-    treap(vector< int >& a) {
+    treap(vector<int>& a) {
         rnd = mt19937(chrono::steady_clock::now().time_since_epoch().count());
         for (auto k : a) {
             insert(k);
         }
     }
 
-    pair< treapNode*, treapNode* > split(treapNode * node, int k) {
+    pair<treapNode*, treapNode*> split(treapNode * node, int k) {
         if (node == nullptr) {
             return {nullptr, nullptr};
         } if (k <= node->value) {

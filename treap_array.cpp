@@ -27,7 +27,7 @@ struct treapAr {
         root = _root;
     }
 
-    pair< treapArNode*, treapArNode* > split(treapArNode * node, int k) {
+    pair<treapArNode*, treapArNode*> split(treapArNode * node, int k) {
         if (node == nullptr) {
             return {nullptr, nullptr};
         }
@@ -103,18 +103,18 @@ struct treapAr {
         return get(i)->value;
     }
 
-    vector< int > toVector(treapArNode * node) {
+    vector<int> toVector(treapArNode * node) {
         if (node == nullptr) {
-            return vector< int >({});
+            return vector<int>({});
         }
-        vector< int > vLeft = toVector(node->left);
-        vector< int > vRight = toVector(node->right);
+        vector<int> vLeft = toVector(node->left);
+        vector<int> vRight = toVector(node->right);
         vLeft.push_back(node->value);
         vLeft.insert(vLeft.end(), vRight.begin(), vRight.end());
         return vLeft;
     }
 
-    vector< int > toVector() {
+    vector<int> toVector() {
         return toVector(root);
     }
 
