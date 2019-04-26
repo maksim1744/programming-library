@@ -1,3 +1,5 @@
+const int inf = 1e9 * 2 + 5;
+
 struct item {
     int mx = 0;
     int ind = 0;  // index of maximum
@@ -37,7 +39,7 @@ struct segtree {
     int n;
 
     segtree(int size) : n(size), tree(size * 4, item()) {
-        vector<decltype(item().mx)> v(n, 0);
+        vector<decltype(item().mx)> v(n, -inf);
         build(v, 0, 0, n - 1);
     }
     template<typename InType>
@@ -92,6 +94,8 @@ struct segtree {
 
     template<typename InType>
     void add(int l, int r, InType k) {
+        if (l > r)
+            return;
         add(l, r, k, 0, 0, n - 1);
     }
 
@@ -108,6 +112,8 @@ struct segtree {
     }
 
     auto ask(int l, int r) {
+        if (l > r)
+            return -inf;
         return ask(l, r, 0, 0, n - 1);
     }
 
@@ -124,6 +130,8 @@ struct segtree {
     }
 
     auto ask_item(int l, int r) {
+        if (l > r)
+            return item(-inf);
         return ask_item(l, r, 0, 0, n - 1);
     }
 };
