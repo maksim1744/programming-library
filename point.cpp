@@ -38,8 +38,19 @@ struct point {
     point operator / (long double k) {
         return point(x / k, y / k);
     }
+
+    point& norm() {
+        ld d = len();
+        if (d != 0) {
+            x /= d;
+            y /= d;
+        }
+        return *this;
+    }
 };
 
-string to_string (point& p) {
+#ifdef HOME
+string to_string(point p) {
     return "(" + to_string(p.x) + ", " + to_string(p.y) + ")";
 }
+#endif
