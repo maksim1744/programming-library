@@ -64,30 +64,65 @@ vector<long long> ntt(vector<long long>& v, bool inv = false) {
     }
     v.resize(n, 0);
     assert(mod % n == 1);
-    vector<long long> v1(n / 2), v2(n / 2);
-    for (int i = 0; i < n / 2; ++i) {
-        v1[i] = v[2 * i];
-        v2[i] = v[2 * i + 1];
-    }
-    vector<long long> ntt1 = ntt(v1, inv), ntt2 = ntt(v2, inv);
-    long long w, x = 1;
+
+    long long w0;
     if (inv) {
-        w = powMod(ginv, (mod - 1) / n, mod);
+        w0 = powMod(ginv, (mod - 1) / n, mod);
     } else {
-        w = powMod(g, (mod - 1) / n, mod);
+        w0 = powMod(g, (mod - 1) / n, mod);
     }
-    vector<long long> ans(n);
-    for (int i = 0; i < n; ++i) {
-        ans[i] = (ntt1[i % (n / 2)] + x * ntt2[i % (n / 2)]) % mod;
-        x = (x * w) % mod;
+
+    n /= 2;
+    int k = 0, n1 = 2 * n;
+    while (n1 > 1) {
+        n1 >>= 1;
+        ++k;
     }
-    if (inv) {
-        // long long ninv = powMod(inv2, p2, mod);
-        for (int i = 0; i < n; ++i) {
-            ans[i] = ans[i] * inv2 % mod;
+
+    vector<long long> w(2 * n);
+    w[0] = 1;
+    w[1] = w0;
+    for (int i = 2; i < 2 * n; ++i) {
+        if (i >= n) {
+            w[i] = mod - w[i - n];
+        } else {
+            w[i] = w[i / 2] * w[i - i / 2] % mod;
         }
     }
-    return ans;
+    vector<int> ind(2 * n, 0);
+    ind[1] = 1 << (k - 1);
+    int id = 2;
+    for (int i = 1; i < k; ++i) {
+        int z = (1 << i);
+        for (int j = 0; j < z; ++j) {
+            ind[id] = (ind[id - z]) + (1 << (k - 1 - i));
+            ++id;
+        }
+    }
+    vector<long long> v1(n * 2);
+    for (int i = 0; i < 2 * n; ++i) {
+        v1[i] = (v[ind[i]]);
+    }
+    for (int i = k - 1; i >= 0; --i) {
+        int cnt = (1 << i);
+        int sz = (1 << (k - i));
+        int k1 = sz / 2 - 1;
+        for (int j = 0; j < cnt; ++j) {
+            int k2 = sz * j;
+            vector<long long> va(v1.begin() + sz * j, v1.begin() + sz * j + sz / 2);
+            vector<long long> vb(v1.begin() + sz * j + sz / 2, v1.begin() + sz * j + sz);
+            for (int u = 0; u < sz; ++u) {
+                v1[k2 + u] = (va[u & k1] + w[u << i] * vb[u & k1]) % mod;
+            }
+        }
+    }
+
+    if (inv) {
+        for (int i = 0; i < n; ++i) {
+            v1[i] = v1[i] * mpow(inv2, k) % mod;
+        }
+    }
+    return v1;
 }
 
 vector<long long> mul(vector<long long>& a, vector<long long>& b) {

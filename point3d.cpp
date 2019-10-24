@@ -1,27 +1,27 @@
 struct Pt {
-    ld x, y, z;
+    long double x, y, z;
 
     Pt() : x(0), y(0), z(0) {}
-    Pt(ld x, ld y, ld z) : x(x), y(y), z(z) {}
+    Pt(long double x, long double y, long double z) : x(x), y(y), z(z) {}
 
-    Pt operator-(Pt b) {
+    Pt operator - (Pt b) {
         return Pt(x - b.x, y - b.y, z - b.z);
     }
-    Pt operator+(Pt b) {
+    Pt operator + (Pt b) {
         return Pt(x + b.x, y + b.y, z + b.z);
     }
-    Pt operator*(ld k) {
+    Pt operator * (long double k) {
         return Pt(x * k, y * k, z * k);
     }
-    Pt operator/(ld k) {
+    Pt operator / (long double k) {
         return Pt(x / k, y / k, z / k);
     }
 
-    ld len() {
+    long double len() {
         return sqrt(x * x + y * y + z * z);
     }
 
-    ld dp(Pt b) {
+    long double dp(Pt b) {
         return x * b.x + y * b.y + z * b.z;
     }
 
@@ -29,7 +29,7 @@ struct Pt {
         return Pt(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x);
     }
 };
-ld tp(Pt a, Pt b, Pt c) {
+long double tp(Pt a, Pt b, Pt c) {
     return a.dp(b.cp(c));
 }
 struct Tr {
