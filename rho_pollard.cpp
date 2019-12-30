@@ -1,7 +1,21 @@
+ull mul_mod(ull a, ull b, ull mod) {
+    ull res = 0;
+    while (b) {
+        if (b & 1) {
+            res += a;
+            if (res >= mod)
+                res -= mod;
+        }
+        b >>= 1;
+        a <<= 1;
+        if (a >= mod)
+            a -= mod;
+    }
+    return res;
+}
+
 ll get_divisor(ll n) {
-    for (int i = 2; i < 1000; ++i)
-        if (n % i == 0)
-            return i;
+    // maybe check divisors <= 1000 to speed up
     auto f = [&](ll x) {
         return (mul_mod(x, x, n) + 1) % n;
     };
@@ -23,9 +37,7 @@ ll get_divisor(ll n) {
 
 ll get_prime_divisor(ll n) {
     ll p = n;
-    while (!is_prime(p)) {
+    while (!is_prime(p))
         p = get_divisor(p);
-    }
-    show(p);
     return p;
 }

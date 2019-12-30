@@ -1,21 +1,28 @@
+// copy mul_mod from rho_pollard
+ull mpow_long(ull a, ull p, ull mod) {
+    ull res = 1;
+    while (p) {
+        if (p & 1) res = mul_mod(res, a, mod);
+        p >>= 1;
+        a = mul_mod(a, a, mod);
+    }
+    return res;
+}
+
 bool is_prime(ull n) {
     if (n < 2)
         return false;
-    for (int i = 2; i < min(n, (ull)1000); ++i)
-        if (n % i == 0)
-            return false;
-    if (n <= 1000 * 1000)
-        return true;
+    // maybe check divisors <= 1000 to speed up
     int s = 0;
     ull d = n - 1;
     while (d % 2 == 0) {
         ++s;
         d >>= 1;
     }
-    int k = 70;  // ~ log n
+    int k = 70;  // log n
     for (int ii = 0; ii < k; ++ii) {
-        ll a = rnd(2, n - 2);
-        ll x = mpow(a, d, n);
+        ull a = rnd(2, n - 2);
+        ull x = mpow_long(a, d, n);
         if (x == 1 || x == n - 1)
             continue;
         bool composite = true;
