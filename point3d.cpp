@@ -32,6 +32,9 @@ struct Pt {
 long double tp(Pt a, Pt b, Pt c) {
     return a.dp(b.cp(c));
 }
+string to_string(Pt a) {
+    return "(" + to_string(a.x) + ", " + to_string(a.y) + ", " + to_string(a.z) + ")";
+}
 struct Tr {
     Pt a, b, c;
     Pt norm;
