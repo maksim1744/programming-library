@@ -189,6 +189,8 @@ Big operator + (Big a, Big b) {
         }
         for (int i = 0; i < b.size(); ++i) {
             c[i] += b[i];
+        }
+        for (int i = 0; i < c.size(); ++i) {
             if (c[i] >= base) {
                 c[i] -= base;
                 c[i + 1]++;
