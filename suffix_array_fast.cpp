@@ -52,3 +52,24 @@ vector<int> build_suf_array(string s, bool add_dollar = true) {
 
     return res;
 }
+
+vector<int> build_lcp(const string &s, const vector<int> &suf_array) {
+    int n = s.size();
+    vector<int> lcp(n - 1);
+    vector<int> ind(n);
+    for (int i = 0; i < n; ++i) {
+        ind[suf_array[i]] = i;
+    }
+    int last = 1;
+    for (int i = 0; i < n; ++i) {
+        last = max(last - 1, 0);
+        int i_cur = i;
+        if (ind[i_cur] != 0) {
+            int i_prev = suf_array[ind[i_cur] - 1];
+            while (i_cur + last < s.size() && i_prev + last < s.size() && s[i_cur + last] == s[i_prev + last])
+                ++last;
+            lcp[ind[i_cur] - 1] = last;
+        }
+    }
+    return lcp;
+}
