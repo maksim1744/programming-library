@@ -1,15 +1,13 @@
 long long mod = 998244353, g = 3, ginv = 332748118, inv2 = (mod + 1) / 2;
 
-long long powMod(long long a, long long n, long long mod = mod) {
-    if (n == 1) {
-        return a % mod;
+long long mpow(long long a, long long p, long long mod = mod) {
+    long long res = 1;
+    while (p) {
+        if (p & 1) res = res * a % mod;
+        p >>= 1;
+        a = a * a % mod;
     }
-    if (n % 2 == 0) {
-        long long k = powMod(a, n / 2, mod);
-        return k * k % mod;
-    } else {
-        return powMod(a, n - 1, mod) * a % mod;
-    }
+    return res;
 }
 
 long long findG(long long mod = mod) {
@@ -39,7 +37,7 @@ long long findG(long long mod = mod) {
     while (true) {
         bool ok = true;
         for (auto k : d) {
-            if (powMod(g, k, mod) == 1) {
+            if (mpow(g, k, mod) == 1) {
                 ok = false;
                 break;
             }
@@ -57,19 +55,17 @@ vector<long long> ntt(vector<long long>& v, bool inv = false) {
         return v;
     }
     int n = 1;
-    int p2 = 0;
     while (n < v.size()) {
         n <<= 1;
-        ++p2;
     }
     v.resize(n, 0);
     assert(mod % n == 1);
 
     long long w0;
     if (inv) {
-        w0 = powMod(ginv, (mod - 1) / n, mod);
+        w0 = mpow(ginv, (mod - 1) / n, mod);
     } else {
-        w0 = powMod(g, (mod - 1) / n, mod);
+        w0 = mpow(g, (mod - 1) / n, mod);
     }
 
     n /= 2;
@@ -118,8 +114,9 @@ vector<long long> ntt(vector<long long>& v, bool inv = false) {
     }
 
     if (inv) {
-        for (int i = 0; i < n; ++i) {
-            v1[i] = v1[i] * mpow(inv2, k) % mod;
+        ll ip2 = mpow(inv2, k);
+        for (int i = 0; i < v1.size(); ++i) {
+            v1[i] = v1[i] * ip2 % mod;
         }
     }
     return v1;
