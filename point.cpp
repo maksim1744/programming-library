@@ -1,7 +1,7 @@
 struct point {
     long double x, y;
-    point() {}
-    point(long double x, long double y): x(x), y(y) {}
+
+    point(long double x = 0, long double y = 0): x(x), y(y) {}
     point(point a, point b) {
         x = b.x - a.x;
         y = b.y - a.y;
