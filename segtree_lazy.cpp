@@ -11,6 +11,18 @@ struct item {
         res.update(first, second, l, r);  // careful with different lengths
         return res;
     }
+
+    template<typename Modifier>
+    void modify(const Modifier &m, int l, int r) {
+        // apply here, save for children
+    }
+
+    void push(item &first, item &second, int l, int r) {
+        // int m = (l + r) / 2;
+        // first.modify(, l, m);
+        // second.modify(, m + 1, r);
+        // reset modifier
+    }
 };
 
 string to_string(const item &i) {
@@ -47,6 +59,9 @@ struct segtree {
     }
 
     item ask(int l, int r, int i, int vl, int vr) {
+        if (vl != vr) {
+            tree[i].push(tree[i * 2 + 1], tree[i * 2 + 2], vl, vr);
+        }
         if (l == vl && r == vr) {
             return tree[i];
         }
@@ -71,6 +86,9 @@ struct segtree {
         int l = 0, r = n - 1, i = 0;
         int ptr = -1;
         while (l != r) {
+            if (l != r) {
+                tree[i].push(tree[i * 2 + 1], tree[i * 2 + 2], l, r);
+            }
             st[++ptr] = {l, r};
             int m = (l + r) >> 1;
             if (ind <= m) {
@@ -87,5 +105,32 @@ struct segtree {
             tree[i].update(tree[i * 2 + 1], tree[i * 2 + 2], st[ptr].first, st[ptr].second);
             --ptr;
         }
+    }
+
+    template<typename Modifier>
+    void modify(int l, int r, const Modifier &modifier, int i, int vl, int vr) {
+        if (vl != vr) {
+            tree[i].push(tree[i * 2 + 1], tree[i * 2 + 2], vl, vr);
+        }
+        if (l == vl && r == vr) {
+            tree[i].modify(modifier, vl, vr);
+            return;
+        }
+        int m = (vl + vr) >> 1;
+        if (r <= m) {
+            modify(l, r, modifier, i * 2 + 1, vl, m);
+        } else if (m < l) {
+            modify(l, r, modifier, i * 2 + 2, m + 1, vr);
+        } else {
+            modify(l, m, modifier, i * 2 + 1, vl, m);
+            modify(m + 1, r, modifier, i * 2 + 2, m + 1, vr);
+        }
+        tree[i].update(tree[i * 2 + 1], tree[i * 2 + 2], vl, vr);
+    }
+
+    template<typename Modifier>
+    void modify(int l, int r, const Modifier &modifier) {
+        if (l > r) return;
+        modify(l, r, modifier, 0, 0, n - 1);
     }
 };
