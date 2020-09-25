@@ -48,8 +48,8 @@ template<auto P> Modular<P> pow(Modular<P> m, ll p) {
     return r;
 }
 
-template<auto P> ostream& operator << (ostream& o, const Modular<P> m) { return o << m.value; }
-template<auto P> istream& operator >> (istream& i,       Modular<P> m) { ll k; i >> k; m.value = m.norm(k); return i; }
+template<auto P> ostream& operator << (ostream& o, const Modular<P> &m) { return o << m.value; }
+template<auto P> istream& operator >> (istream& i,       Modular<P> &m) { ll k; i >> k; m.value = m.norm(k); return i; }
 template<auto P> string   to_string(const Modular<P>& m) { return to_string(m.value); }
 
 using Mint = Modular<1000000007>;
