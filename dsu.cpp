@@ -26,4 +26,8 @@ struct DSU {
         rk[v] += rk[u];
         return true;
     }
+
+    bool check(int u, int v) {
+        return par(u) == par(v);
+    }
 };
