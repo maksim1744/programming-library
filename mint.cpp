@@ -20,8 +20,8 @@ struct Modular {
 
     Modular<P>& operator ++                    ()       { return *this += 1; }
     Modular<P>& operator --                    ()       { return *this -= 1; }
-    Modular<P>  operator ++                 (int)       { Modular<P> r = *this; r += 1; return r; }
-    Modular<P>  operator --                 (int)       { Modular<P> r = *this; r -= 1; return r; }
+    Modular<P>  operator ++                 (int)       { Modular<P> r = *this; *this += 1; return r; }
+    Modular<P>  operator --                 (int)       { Modular<P> r = *this; *this -= 1; return r; }
 
     bool        operator == (const Modular<P>& m) const { return value == m.value; }
     bool        operator != (const Modular<P>& m) const { return value != m.value; }

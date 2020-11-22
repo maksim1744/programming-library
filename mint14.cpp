@@ -20,8 +20,8 @@ struct Modular {
 
     Modular& operator ++                    ()       { return *this += 1; }
     Modular& operator --                    ()       { return *this -= 1; }
-    Modular  operator ++                 (int)       { Modular r = *this; r += 1; return r; }
-    Modular  operator --                 (int)       { Modular r = *this; r -= 1; return r; }
+    Modular  operator ++                 (int)       { Modular r = *this; *this += 1; return r; }
+    Modular  operator --                 (int)       { Modular r = *this; *this -= 1; return r; }
 
     bool        operator == (const Modular& m) const { return value == m.value; }
     bool        operator != (const Modular& m) const { return value != m.value; }
@@ -49,8 +49,8 @@ template<int P> Modular<P> pow(Modular<P> m, ll p) {
     return r;
 }
 
-template<int P> ostream& operator << (ostream& o, const Modular<P> m) { return o << m.value; }
-template<int P> istream& operator >> (istream& i,       Modular<P> m) { ll k; i >> k; m.value = m.norm(k); return i; }
+template<int P> ostream& operator << (ostream& o, const Modular<P> &m) { return o << m.value; }
+template<int P> istream& operator >> (istream& i,       Modular<P> &m) { ll k; i >> k; m.value = m.norm(k); return i; }
 template<int P> string   to_string(const Modular<P>& m) { return to_string(m.value); }
 
 using Mint = Modular<1000000007>;
