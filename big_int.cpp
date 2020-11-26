@@ -139,6 +139,7 @@ istream& operator >> (istream& in, Big& b) {
     string s;
     cin >> s;
     b.assign(s);
+    return in;
 }
 
 bool operator == (Big a, Big b) {
