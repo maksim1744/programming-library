@@ -37,7 +37,7 @@ vector<pair<int, int>> find_matching(vector<vector<int>>& g, vector<int> a) {
     return result;
 }
 
-bool dominanting_set_dfs(int v, vector<vector<int>>& g, vector<int>& with, vector<bool>& u,
+void dominanting_set_dfs(int v, vector<vector<int>>& g, vector<int>& with, vector<bool>& u,
                                                                            vector<bool>& take) {
     u[v] = true;
     for (auto k : g[v]) {

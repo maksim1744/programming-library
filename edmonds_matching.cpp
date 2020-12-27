@@ -46,11 +46,7 @@ vector<pair<int, int>> edmonds(vector<vector<int>>& g) {
         u[root] = true;
         while (ql < qr) {
             int v = q[ql++];
-            showt(v, base);
-            show(match);
-            show(p);
             for (auto k : g[v]) {
-                show(k);
                 if (base[v] == base[k] || match[v] == k) {
                     continue;
                 } else if (k == root || match[k] != -1 && p[match[k]] != -1) {
@@ -82,10 +78,7 @@ vector<pair<int, int>> edmonds(vector<vector<int>>& g) {
 
     for (int i = 0; i < n; ++i) {
         if (match[i] == -1) {
-            showt(i, match);
             int v = find_path(i);
-            show(v);
-            show(p, match);
             while (v != -1) {
                 match[v] = p[v];
                 int k = match[p[v]];
@@ -94,11 +87,9 @@ vector<pair<int, int>> edmonds(vector<vector<int>>& g) {
             }
         }
     }
-    show(match);
     vector<pair<int, int>> ans;
     for (int i = 0; i < n; ++i)
         if (match[i] > i)
             ans.eb(i, match[i]);
-    show(ans);
     return ans;
 }

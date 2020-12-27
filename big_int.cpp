@@ -26,7 +26,7 @@ struct Big {
             minus = false;
     }
 
-    void assign(string& s) {
+    void assign(string s) {
         v.clear();
         reverse(s.begin(), s.end());
         if (s.back() == '-') {
@@ -142,19 +142,19 @@ istream& operator >> (istream& in, Big& b) {
     return in;
 }
 
-bool operator == (Big a, Big b) {
+bool operator == (const Big &a, const Big &b) {
     return a.minus == b.minus && a.v == b.v;
 }
 
-bool operator == (Big& a, long long k) {
+bool operator == (const Big &a, long long k) {
     return (a == Big(k));
 }
 
-bool operator != (Big a, Big b) {
+bool operator != (const Big &a, const Big &b) {
     return !(a == b);
 }
 
-bool operator < (Big a, Big b) {
+bool operator < (const Big &a, const Big &b) {
     if (a.minus != b.minus)
         return a.minus;
     bool minus = a.minus;
@@ -166,6 +166,14 @@ bool operator < (Big a, Big b) {
     return false;
 }
 
+bool operator > (const Big &a, const Big &b) {
+    return b < a;
+}
+
+bool operator <= (const Big &a, const Big &b) {
+    return !(b < a);
+}
+
 bool abs_comp(const Big& a, const Big& b) {
     if (a.size() != b.size())
         return (a.size() < b.size());
@@ -175,13 +183,14 @@ bool abs_comp(const Big& a, const Big& b) {
     return false;
 }
 
-Big operator - (Big a) {
-    a.minus = !a.minus;
+Big operator - (const Big &a) {
+    auto res = a;
+    res.minus = !res.minus;
     return a;
 }
 
-Big operator - (Big a, Big b);
-Big operator + (Big a, Big b) {
+Big operator - (const Big &a, const Big &b);
+Big operator + (const Big &a, const Big &b) {
     if (a.minus == b.minus) {
         Big c;
         c.resize(max(a.size(), b.size()) + 3);
@@ -209,15 +218,19 @@ Big operator + (Big a, Big b) {
     }
 }
 
-Big operator - (Big a, Big b) {
-    if (a.minus == b.minus) {
+Big operator - (const Big &aa, const Big &bb) {
+    if (aa.minus == bb.minus) {
         bool minus = false;
+        Big a = aa;
+        Big b = bb;
         if (abs_comp(a, b)) {
             swap(a, b);
             minus = true;
         }
         for (int i = 0; i < b.size(); ++i) {
             a[i] -= b[i];
+        }
+        for (int i = 0; i < a.size(); ++i) {
             if (a[i] < 0) {
                 a[i] += base;
                 a[i + 1]--;
@@ -227,15 +240,16 @@ Big operator - (Big a, Big b) {
         a.norm();
         return a;
     } else {
-        if (a.minus) {
-            return -((-a) + b);
+        if (aa.minus) {
+            return -((-aa) + bb);
         } else {
-            return a + (-b);
+            return aa + (-bb);
         }
     }
 }
 
-Big operator * (Big a, Big b) {
+Big operator * (const Big &a, const Big &b) {
+    auto t = clock();
     Big c;
     c.resize(a.size() + b.size() + 3);
     c.minus = a.minus ^ b.minus;
@@ -258,7 +272,8 @@ Big operator * (Big a, Big b) {
     return c;
 }
 
-string to_string(Big a) {
+string to_string(const Big &a) {
+    if (a.size() == 1 && a[0] == 0) return "0";
     string s = a.minus ? "-" : "";
     s += to_string(a.v.back());
     for (int i = (int)a.size() - 2; i >= 0; --i) {
@@ -271,6 +286,11 @@ string to_string(Big a) {
         s += s1;
     }
     return s;
+}
+
+ostream &operator << (ostream &out, const Big &b) {
+    out << to_string(b);
+    return out;
 }
 
 pair<Big, Big> div(Big a, Big b) {
@@ -308,7 +328,22 @@ pair<Big, Big> div(Big a, Big b) {
     return {c, a};
 }
 
-Big operator / (Big a, Big b) {
+Big operator / (const Big &a, const Big &b) {
+    return div(a, b).first;
+}
+
+Big operator / (const Big &a, int b) {
+    if (b < base) {
+        auto res = a;
+        for (int i = (int)a.size() - 1; i >= 0; --i) {
+            if (i != 0) {
+                res[i - 1] += res[i] % b * base;
+            }
+            res[i] /= b;
+        }
+        res.norm();
+        return res;
+    }
     return div(a, b).first;
 }
 
@@ -353,38 +388,47 @@ Rat operator - (Rat a) {
     a.a.minus = !a.a.minus;
     return a;
 }
-Rat operator + (Rat m, Rat n) {
+
+Rat operator + (const Rat &m, const Rat &n) {
     return Rat(m.a * n.b + m.b * n.a, m.b * n.b);
 }
-Rat operator - (Rat m, Rat n) {
+
+Rat operator - (const Rat &m, const Rat &n) {
     return Rat(m.a * n.b - m.b * n.a, m.b * n.b);
 }
-Rat operator * (Rat m, Rat n) {
+
+Rat operator * (const Rat &m, const Rat &n) {
     return Rat(m.a * n.a, m.b * n.b);
 }
-Rat operator / (Rat m, Rat n) {
+
+Rat operator / (const Rat &m, const Rat &n) {
     return Rat(m.a * n.b, n.a * m.b);
 }
 
-bool operator == (Rat a, Rat b) {
+bool operator == (const Rat &a, const Rat &b) {
     return a.a == b.a && a.b == b.b;
 }
-bool operator != (Rat a, Rat b) {
+
+bool operator != (const Rat &a, const Rat &b) {
     return !(a == b);
 }
-bool operator < (Rat a, Rat b) {
+
+bool operator < (const Rat &a, const Rat &b) {
     return a.a * b.b < b.a *a.b;
 }
-bool operator > (Rat a, Rat b) {
+
+bool operator > (const Rat &a, const Rat &b) {
     return b < a;
 }
-bool operator <= (Rat a, Rat b) {
+
+bool operator <= (const Rat &a, const Rat &b) {
     return !(b < a);
 }
-bool operator >= (Rat a, Rat b) {
+
+bool operator >= (const Rat &a, const Rat &b) {
     return !(a < b);
 }
 
-string to_string(Rat r) {
+string to_string(const Rat &r) {
     return to_string(r.a) + "/" + to_string(r.b);
 }
