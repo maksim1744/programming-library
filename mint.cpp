@@ -55,3 +55,15 @@ template<auto P> string   to_string(const Modular<P>& m) { return to_string(m.va
 using Mint = Modular<1000000007>;
 // using Mint = Modular<998244353>;
 // using Mint = long double;
+
+vector<Mint> f, fi;
+void init_C(int n) {
+    f.assign(n, 1); fi.assign(n, 1);
+    for (int i = 2; i < n; ++i) f[i] = f[i - 1] * i;
+    fi.back() = Mint(1) / f.back();
+    for (int i = n - 2; i >= 0; --i) fi[i] = fi[i + 1] * (i + 1);
+}
+Mint C(int n, int k) {
+    if (k < 0 || k > n) return 0;
+    else return f[n] * fi[k] * fi[n - k];
+}
