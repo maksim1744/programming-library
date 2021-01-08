@@ -5,7 +5,7 @@ struct mfmc_edge {
     long long cost; // for 1 flow
 };
 
-pair<ll, COST_T> max_flow_min_cost(vector<vector<pair<int, pair<ll, COST_T>>>> g_main, int s, int t, ll k) {
+pair<ll, COST_T> max_flow_min_cost(vector<vector<pair<int, pair<ll, COST_T>>>> g_main, int s, int t, ll k = -1) {
     int n = g_main.size();
     vector<vector<int>> g(n);
     vector<mfmc_edge> e;
@@ -40,11 +40,13 @@ pair<ll, COST_T> max_flow_min_cost(vector<vector<pair<int, pair<ll, COST_T>>>> g
     }
     pair<ll, COST_T> ans = {0, 0};
     vector<ll> d = p;
-    for (int i = 0; i < k; ++i) {
+    while (true) {
         if (par[t] == -1)
             break;
+        if (ans.first == k)
+            break;
         int v = t;
-        ll flow = inf, cost = 0;
+        ll flow = (k == -1 ? (ll)4e18 : k - ans.first), cost = 0;
         while (v != s) {
             flow = min(flow, e[par[v]].mx);
             cost += e[par[v]].cost;
@@ -57,7 +59,7 @@ pair<ll, COST_T> max_flow_min_cost(vector<vector<pair<int, pair<ll, COST_T>>>> g
             v = e[par[v]].from;
         }
         ans.first += flow;
-        ans.second += cost;
+        ans.second += cost * flow;
         par.assign(n, -1);
         d.assign(n, inf);
         d[s] = 0;
