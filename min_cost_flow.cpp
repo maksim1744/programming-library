@@ -62,7 +62,7 @@ pair<ll, COST_T> max_flow_min_cost(vector<vector<pair<int, pair<ll, COST_T>>>> g
         d.assign(n, inf);
         d[s] = 0;
         priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<pair<ll, int>>> pq;
-        pq.push({0, 0});
+        pq.push({0, s});
         while (!pq.empty()) {
             int v = pq.top().second;
             ll ds = pq.top().first;
