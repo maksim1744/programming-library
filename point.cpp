@@ -7,35 +7,35 @@ struct point {
         y = b.y - a.y;
     }
 
-    long double dist(point b) {
+    long double dist(point b) const {
         return sqrt((b.x - x) * (b.x - x) + (b.y - y) * (b.y - y));
     }
-    long double len() {
+    long double len() const {
         return sqrt(x * x + y * y);
     }
-    long double slen() {
+    long double slen() const {
         return x * x + y * y;
     }
-    point ort() {
+    point ort() const {
         return point(-y, x);
     }
-    long double dp(point p) {
+    long double dp(point p) const {
         return x * p.x + y * p.y;
     }
-    long double cp(point p) {
+    long double cp(point p) const {
         return x * p.y - y * p.x;
     }
 
-    point operator + (point a) {
+    point operator + (point a) const {
         return point(a.x + x, a.y + y);
     }
-    point operator - (point a) {
+    point operator - (point a) const {
         return point(x - a.x, y - a.y);
     }
-    point operator * (long double k) {
+    point operator * (long double k) const {
         return point(x * k, y * k);
     }
-    point operator / (long double k) {
+    point operator / (long double k) const {
         return point(x / k, y / k);
     }
 
