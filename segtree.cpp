@@ -61,6 +61,7 @@ struct segtree {
     }
 
     item ask(int l, int r) {
+        l = max(l, 0); r = min(r, n - 1);
         if (l > r) return item();
         return ask(l, r, 0, 0, n - 1);
     }
