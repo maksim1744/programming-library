@@ -1,12 +1,9 @@
 namespace fft {
 
-// TODO: square, maybe reduce number of fft calls in multiply_mod
+// TODO: square
 
-using dbl = double;  // works for max value (max(a)*max(b)*n) up to 1e14
+using dbl = double;  // works for max value (max(a)*max(b)*n) up to 1e14 (multiply_mod with n up to 1e5)
 // using dbl = long double;  // works for max value (max(a)*max(b)*n) up to 1e17
-
-// multiply_mod requires long double !!!
-
 const dbl PI = acosl(-1.0l);
 
 struct Complex {
@@ -68,7 +65,7 @@ void fft_internal(vector<Complex> &v, int from, int n, bool inv) {
                 Complex y = v[from + i + j + ln] * w[ind];
                 ind += step;
                 v[from + i + j + ln] = v[from + i + j] - y;
-                v[from + i + j] = v[from + i + j] + y;
+                v[from + i + j]      = v[from + i + j] + y;
             }
         }
     }
@@ -173,29 +170,27 @@ vector<int> multiply_mod(const vector<int> &a, const vector<int> &b, int mod) {
         dbl bs2i = ( buf2[i].y - buf2[j].y) / 2;
         dbl bl1i = ( buf2[i].y + buf2[j].y) / 2;
 
-        Complex as(as1i, as2i);
-        Complex al(al1i, al2i);
-        Complex bs(bs1i, bs2i);
-        Complex bl(bl1i, bl2i);
+        Complex asbs(as1i * bs1i - as2i * bs2i, as1i * bs2i + as2i * bs1i);
+        Complex asbl(as1i * bl1i - as2i * bl2i, as1i * bl2i + as2i * bl1i);
+        Complex albs(al1i * bs1i - al2i * bs2i, al1i * bs2i + al2i * bs1i);
+        Complex albl(al1i * bl1i - al2i * bl2i, al1i * bl2i + al2i * bl1i);
 
-        buf1[i] = buf1[j] = as * bs; buf1[j].y *= -1;
-        buf1[i + n] = buf1[j + n] = al * bl; buf1[j + n].y *= -1;
+        buf1[i] = asbs + Complex(-albl.y, albl.x);
+        buf1[j] = asbs.conj() + Complex(albl.y, albl.x);
 
-        buf2[i] = buf2[j] = as * bl; buf2[j].y *= -1;
-        buf2[i + n] = buf2[j + n] = al * bs; buf2[j + n].y *= -1;
+        buf2[i] = asbl + Complex(-albs.y, albs.x);
+        buf2[j] = asbl.conj() + Complex(albs.y, albs.x);
     }
 
     fft_internal(buf1, 0, n, true);
-    fft_internal(buf1, n, n, true);
     fft_internal(buf2, 0, n, true);
-    fft_internal(buf2, n, n, true);
 
     vector<int> result(a.size() + b.size() - 1);
     for (int i = 0; i < result.size(); ++i) {
         long long asbs = llround(buf1[i].x);
-        long long albl = llround(buf1[i + n].x);
+        long long albl = llround(buf1[i].y);
         long long asbl = llround(buf2[i].x);
-        long long albs = llround(buf2[i + n].x);
+        long long albs = llround(buf2[i].y);
         result[i] = (((albl % mod) << 30) + (((asbl + albs) % mod) << 15) + asbs) % mod;
     }
     return result;
