@@ -1,180 +1,204 @@
-const long double eps = 1e-12;
-const long double pi = 3.14159265358979323;
-
-// when using big integers mod = 10000 works better than 100000 and bigger;
-// using Complex = complex<long double>;  // slower than my Complex
-
 namespace fft {
-struct Complex {
-    long double x, y;
 
-    Complex() : x(0), y(0) {}
-    Complex(long double _x, long double _y) : x(_x), y(_y) {}
-    Complex(long double _x) : x(_x), y(0) {}
-    Complex(const Complex& c) : x(c.x), y(c.y) {}
+// TODO: square, maybe reduce number of fft calls in multiply_mod
+
+using dbl = double;  // works for max value (max(a)*max(b)*n) up to 1e14
+// using dbl = long double;  // works for max value (max(a)*max(b)*n) up to 1e17
+
+// multiply_mod requires long double !!!
+
+const dbl PI = acosl(-1.0l);
+
+struct Complex {
+    dbl x, y;
+    Complex(dbl x = 0, dbl y = 0) : x(x), y(y) {}
+    Complex conj() const {
+        return Complex(x, -y);
+    }
 };
 
-Complex operator - (Complex& a) {
-    return Complex(-a.x, -a.y);
+void     operator *= (      Complex &a, const Complex &b) { a = Complex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x); }
+Complex  operator *  (const Complex &a, const Complex &b) { return Complex(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x); }
+void     operator /= (      Complex &a, int n)            { a.x /= n; a.y /= n; }
+void     operator += (      Complex &a, const Complex &b) { a.x += b.x; a.y += b.y; }
+Complex  operator +  (const Complex &a, const Complex &b) { return Complex(a.x + b.x, a.y + b.y); }
+void     operator -= (      Complex &a, const Complex &b) { a.x -= b.x; a.y -= b.y; }
+Complex  operator -  (const Complex &a, const Complex &b) { return Complex(a.x - b.x, a.y - b.y); }
+
+string to_string(const Complex &x) { return (string)"(" + std::to_string(x.x) + ", " + std::to_string(x.y) + ")"; };
+
+vector<Complex> buf1;
+vector<Complex> buf2;
+
+vector<Complex> w = {1, 1};
+vector<int> reversed = {0};
+
+void update_n(int n) {
+    assert((n & (n - 1)) == 0);
+    int cur = reversed.size();
+    reversed.resize(n);
+    w.resize(n + 1);
+    while (cur < n) {
+        for (int i = 0; i < cur; ++i)
+            reversed[i] <<= 1;
+        for (int i = cur; i < (cur << 1); ++i)
+            reversed[i] = reversed[i - cur] ^ 1;
+        for (int i = (cur << 1) - 2; i > 0; i -= 2)
+            w[i] = w[i / 2];
+        for (int i = 1; i < (cur << 1); i += 2)
+            w[i] = Complex(cos(PI * i / cur), sin(PI * i / cur));
+        cur *= 2;
+    }
+    w.back() = 1;
 }
 
-Complex operator + (Complex& a, Complex&& b) {
-    return Complex(a.x + b.x, a.y + b.y);
-}
+void fft_internal(vector<Complex> &v, int from, int n, bool inv) {
+    update_n(n);
+    int N = reversed.size();
 
-Complex operator * (Complex& a, Complex& b) {
-    return Complex(a.x * b.x - a.y * b.y, a.x * b.y + b.x * a.y);
-}
+    for (int i = 1; i < n; ++i)
+        if (i < (reversed[i] >> (N - n)))
+            swap(v[from + i], v[from + (reversed[i] >> (N - n))]);
 
-template<typename T>
-vector<Complex> fft(vector<T>& v, bool good = false) {
-    if (!good) {
-        int p2 = 1;
-        while (p2 < v.size()) {
-            p2 <<= 1;
-        }
-        v.resize(p2);
-        for (int i = v.size(); i < p2; ++i) {
-            v[i] = 0;
-        }
-    }
-    if (v.size() == 1) {
-        return vector<Complex> {Complex(v[0])};
-    }
-    int n = v.size() / 2;
-    vector<Complex> v1(n * 2);
-    int k = 0, n1 = 2 * n;
-    while (n1 > 1) {
-        n1 >>= 1;
-        ++k;
-    }
-    vector<Complex> w(2 * n);
-    w[0] = 1;
-    w[1] = Complex(cosl(pi / n), sinl(pi / n));
-    for (int i = 2; i < 2 * n; ++i) {
-        if (i >= n) {
-            w[i] = -w[i - n];
-        } else {
-            w[i] = w[i / 2] * w[i - i / 2];
-        }
-    }
-    vector<int> ind(2 * n, 0);
-    ind[1] = 1 << (k - 1);
-    int id = 2;
-    for (int i = 1; i < k; ++i) {
-        int z = (1 << i);
-        for (int j = 0; j < z; ++j) {
-            ind[id] = (ind[id - z]) + (1 << (k - 1 - i));
-            ++id;
-        }
-    }
-    for (int i = 0; i < 2 * n; ++i) {
-        v1[i] = Complex(v[ind[i]]);
-    }
-    for (int i = k - 1; i >= 0; --i) {
-        int cnt = (1 << i);
-        int sz = (1 << (k - i));
-        int k1 = sz / 2 - 1;
-        for (int j = 0; j < cnt; ++j) {
-            int k2 = sz * j;
-            vector<Complex> va(v1.begin() + sz * j, v1.begin() + sz * j + sz / 2);
-            vector<Complex> vb(v1.begin() + sz * j + sz / 2, v1.begin() + sz * j + sz);
-            for (int u = 0; u < sz; ++u) {
-                v1[k2 + u] = va[u & k1] + w[u << i] * vb[u & k1];
+    for (int ln = 1; ln < n; ln <<= 1) {
+        int step = (inv ? -N : N) / (ln * 2);
+        for (int i = 0; i < n; i += (ln << 1)) {
+            int ind = (inv ? N : 0);
+            for (int j = 0; j < ln; ++j) {
+                Complex y = v[from + i + j + ln] * w[ind];
+                ind += step;
+                v[from + i + j + ln] = v[from + i + j] - y;
+                v[from + i + j] = v[from + i + j] + y;
             }
         }
     }
-    return v1;
+
+    if (inv)
+        for (int i = 0; i < n; ++i)
+            v[from + i] /= n;
 }
 
-template<typename T>
-vector<T> multiply(vector<T>& a, vector<T>& b) {
-    // if (a.size() <= 2 || b.size() <= 2) {
-    //     vector<T> c(a.size() + b.size() - 1, 0);
-    //     for (int i = 0; i < a.size(); ++i) {
-    //         for (int j = 0; j < b.size(); ++j) {
-    //             c[i + j] += a[i] * b[j];
-    //         }
-    //     }
-    //     while (c.size() > 0 && c.back() == 0) {
-    //         c.pop_back();
-    //     }
-    //     return c;
-    // }
-    int k = a.size() + b.size() - 1;
-    int p2 = 1;
-    while (p2 < k) {
-        p2 <<= 1;
+vector<Complex> fft(const vector<int> &v, int n = -1) {
+    if (n == -1) {
+        n = 1;
+        while (n < v.size()) n <<= 1;
     }
-    int oldasize = a.size();
-    int oldbsize = b.size();
-    a.resize(p2);
-    for (int i = oldasize; i < p2; ++i) {
-        a[i] = 0;
-    }
-    b.resize(p2);
-    for (int i = oldbsize; i < p2; ++i) {
-        b[i] = 0;
-    }
-    int n = p2;
-    vector<Complex> va = fft(a, true), vb = fft(b, true);
-    for (int i = 0; i < n; ++i) {
-        va[i] = va[i] * vb[i];
-    }
-    vector<Complex> ansC = fft(va, true);
-    vector<T> ans(n);
-    for (int i = 0; i < n; ++i) {
-        if (typeid(T) == typeid(int) || typeid(T) == typeid(long long)) {
-            ans[i] = (long long)round(ansC[i].x / (long double)(1.0 * n));  // if T is int
-        } else {
-            ans[i] = ansC[i].x / (1.0 * n);  // if T is real
-            if (ans[i] < eps) {
-                ans[i] = 0;
-            }
-        }
-    }
-    for (int i = 1; i <= n / 2; ++i) {
-        swap(ans[i], ans[n - i]);
-    }
-    while (ans.size() > 0 && ans.back() == 0) {
-        ans.pop_back();
-    }
-    return ans;
+    assert(v.size() <= n);
+    buf1.assign(n, {0, 0});
+    for (int i = 0; i < v.size(); ++i)
+        buf1[i].x = v[i];
+    fft_internal(buf1, 0, n, false);
+    return vector<Complex>(buf1.begin(), buf1.end());
 }
 
-template<typename T>
-void square(vector<T>& a) {
-    int k = a.size() * 2 - 1;
-    int p2 = 1;
-    while (p2 < k) {
-        p2 *= 2;
-    }
-    int oldasize = a.size();
-    a.resize(p2);
-    for (int i = oldasize; i < p2; ++i) {
-        a[i] = 0;
-    }
-    int n = p2;
-    vector<Complex> va = fft(a, true);
-    for (int i = 0; i < n; ++i) {
-        va[i] = va[i] * va[i];
-    }
-    vector<Complex> ansC = fft(va, true);
-    for (int i = 0; i < n; ++i) {
-        if (typeid(T) == typeid(int) || typeid(T) == typeid(long long)) {
-            a[i] = (long long)round(ansC[i].x / (long double)(1.0 * n));  // if T is int
-        } else {
-            a[i] = ansC[i].x / (1.0 * n);  // if T is real
-            if (a[i] < eps) {
-                a[i] = 0;
-            }
-        }
-    }
-    for (int i = 1; i <= n / 2; ++i) {
-        swap(a[i], a[n - i]);
-    }
-    while (a.size() > 0 && a.back() == 0) {
-        a.pop_back();
-    }
+vector<long long> fft(const vector<Complex> &v) {
+    assert(!v.empty() && (v.size() & (v.size() - 1)) == 0);
+    buf1.resize(v.size());
+    for (int i = 0; i < v.size(); ++i)
+        buf1[i] = v[i];
+    fft_internal(buf1, 0, buf1.size(), true);
+    vector<long long> result(v.size());
+    for (int i = 0; i < result.size(); ++i)
+        result[i] = llround(buf1[i].x);
+    return result;
 }
-}  // fft
+
+vector<long long> multiply(const vector<int> &a, const vector<int> &b) {
+    if (a.empty() || b.empty()) return {};
+    int n = 2;
+    while (n < a.size() + b.size() - 1) n <<= 1;
+
+    buf1.assign(n, {0, 0});
+
+    for (int i = 0; i < a.size(); ++i)
+        buf1[i].x = a[i];
+    for (int i = 0; i < b.size(); ++i)
+        buf1[i].y = b[i];
+
+    fft_internal(buf1, 0, n, false);
+
+    for (int i = 0; i <= (n >> 1); ++i) {
+        // a --fft--> a1 + a2*i
+        // b --fft--> b1 + b2*i
+        // fact: FFT(a)[k] = FFT(a)[n - k].conj()
+        // using this we can get formulas for FFT(a) and FFT(b) from FFT(a+bi)
+
+        int j = (n - i) & (n - 1);
+
+        dbl a1i = ( buf1[i].x + buf1[j].x) / 2;
+        dbl b2i = (-buf1[i].x + buf1[j].x) / 2;
+        dbl a2i = ( buf1[i].y - buf1[j].y) / 2;
+        dbl b1i = ( buf1[i].y + buf1[j].y) / 2;
+        buf1[i] = buf1[j] = Complex(a1i * b1i - a2i * b2i, a1i * b2i + a2i * b1i);
+        buf1[j].y *= -1;
+    }
+
+    fft_internal(buf1, 0, n, true);
+
+    vector<long long> result(a.size() + b.size() - 1);
+    for (int i = 0; i < result.size(); ++i)
+        result[i] = llround(buf1[i].x);
+    return result;
+}
+
+vector<int> multiply_mod(const vector<int> &a, const vector<int> &b, int mod) {
+    if (a.empty() || b.empty()) return {};
+    int n = 2;
+    while (n < a.size() + b.size() - 1) n <<= 1;
+
+    buf1.assign(n * 2, {0, 0});
+    for (int i = 0; i < a.size(); ++i) {
+        buf1[i].x = a[i] & ((1 << 15) - 1);
+        buf1[i].y = a[i] >> 15;
+    }
+    buf2.assign(n * 2, {0, 0});
+    for (int i = 0; i < b.size(); ++i) {
+        buf2[i].x = b[i] & ((1 << 15) - 1);
+        buf2[i].y = b[i] >> 15;
+    }
+
+    fft_internal(buf1, 0, n, false);
+    fft_internal(buf2, 0, n, false);
+
+    for (int i = 0; i <= (n >> 1); ++i) {
+        int j = (n - i) & (n - 1);
+
+        dbl as1i = ( buf1[i].x + buf1[j].x) / 2;
+        dbl al2i = (-buf1[i].x + buf1[j].x) / 2;
+        dbl as2i = ( buf1[i].y - buf1[j].y) / 2;
+        dbl al1i = ( buf1[i].y + buf1[j].y) / 2;
+
+        dbl bs1i = ( buf2[i].x + buf2[j].x) / 2;
+        dbl bl2i = (-buf2[i].x + buf2[j].x) / 2;
+        dbl bs2i = ( buf2[i].y - buf2[j].y) / 2;
+        dbl bl1i = ( buf2[i].y + buf2[j].y) / 2;
+
+        Complex as(as1i, as2i);
+        Complex al(al1i, al2i);
+        Complex bs(bs1i, bs2i);
+        Complex bl(bl1i, bl2i);
+
+        buf1[i] = buf1[j] = as * bs; buf1[j].y *= -1;
+        buf1[i + n] = buf1[j + n] = al * bl; buf1[j + n].y *= -1;
+
+        buf2[i] = buf2[j] = as * bl; buf2[j].y *= -1;
+        buf2[i + n] = buf2[j + n] = al * bs; buf2[j + n].y *= -1;
+    }
+
+    fft_internal(buf1, 0, n, true);
+    fft_internal(buf1, n, n, true);
+    fft_internal(buf2, 0, n, true);
+    fft_internal(buf2, n, n, true);
+
+    vector<int> result(a.size() + b.size() - 1);
+    for (int i = 0; i < result.size(); ++i) {
+        long long asbs = llround(buf1[i].x);
+        long long albl = llround(buf1[i + n].x);
+        long long asbl = llround(buf2[i].x);
+        long long albs = llround(buf2[i + n].x);
+        result[i] = (((albl % mod) << 30) + (((asbl + albs) % mod) << 15) + asbs) % mod;
+    }
+    return result;
+}
+
+} // fft
