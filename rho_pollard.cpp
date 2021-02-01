@@ -1,16 +1,11 @@
 ull mul_mod(ull a, ull b, ull mod) {
-    ull res = 0;
-    while (b) {
-        if (b & 1) {
-            res += a;
-            if (res >= mod)
-                res -= mod;
-        }
-        b >>= 1;
-        a <<= 1;
-        if (a >= mod)
-            a -= mod;
-    }
+    #ifdef __SIZEOF_INT128__
+    return (__int128)a * b % mod;
+    #endif
+    ll res = a * b - mod * (ull)((long double)1 / mod * a * b);
+    if (res < 0) res += mod;
+    if (res >= mod) res -= mod;
+    assert(0 <= res && res < mod);
     return res;
 }
 
