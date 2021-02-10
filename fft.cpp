@@ -1,5 +1,4 @@
 namespace fft {
-
 // TODO: square
 
 using dbl = double;  // works for max value (max(a)*max(b)*n) up to 1e14 (multiply_mod with n up to 1e5)
@@ -22,7 +21,8 @@ Complex  operator +  (const Complex &a, const Complex &b) { return Complex(a.x +
 void     operator -= (      Complex &a, const Complex &b) { a.x -= b.x; a.y -= b.y; }
 Complex  operator -  (const Complex &a, const Complex &b) { return Complex(a.x - b.x, a.y - b.y); }
 
-string to_string(const Complex &x) { return (string)"(" + std::to_string(x.x) + ", " + std::to_string(x.y) + ")"; };
+string   to_string   (            const Complex &x) { return (string)"(" + std::to_string(x.x) + ", " + std::to_string(x.y) + ")"; };
+ostream& operator << (ostream &o, const Complex &x) { return o << to_string(x); }
 
 vector<Complex> buf1;
 vector<Complex> buf2;

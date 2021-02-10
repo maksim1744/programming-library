@@ -48,9 +48,6 @@ struct point {
         return *this;
     }
 };
-
-#ifdef HOME
-string to_string(point p) {
-    return "(" + to_string(p.x) + ", " + to_string(p.y) + ")";
+ostream& operator << (ostream& o, const point &p) {
+    return o << "(" << p.x << ", " << p.y << ")";
 }
-#endif

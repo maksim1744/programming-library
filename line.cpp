@@ -34,3 +34,6 @@ string to_string(line& l) {
     ans += "= 0";
     return ans;
 }
+ostream& operator << (ostream &o, const line &l) {
+    return o << to_string(l);
+}

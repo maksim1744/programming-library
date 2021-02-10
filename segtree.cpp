@@ -18,6 +18,9 @@ string to_string(const item &i) {
     ss << "[" << "]";
     return ss.str();
 }
+ostream& operator << (ostream &o, const item &i) {
+    return o << to_string(i);
+}
 
 struct segtree {
     vector<item> tree;

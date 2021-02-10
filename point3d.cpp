@@ -35,6 +35,9 @@ long double tp(Pt a, Pt b, Pt c) {
 string to_string(Pt a) {
     return "(" + to_string(a.x) + ", " + to_string(a.y) + ", " + to_string(a.z) + ")";
 }
+ostream& operator << (ostream& o, const Pt &p) {
+    return o << to_string(p);
+}
 struct Tr {
     Pt a, b, c;
     Pt norm;
