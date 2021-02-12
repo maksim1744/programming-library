@@ -8,14 +8,14 @@ struct Modular {
     Modular<P>& operator += (const Modular<P>& m)       { value += m.value; if (value >= P) value -= P; return *this; }
     Modular<P>  operator +  (const Modular<P>& m) const { Modular<P> r = *this; return r += m; }
 
-    Modular<P>& operator -= (const Modular<P>& m)       { value -= m.value; if (value <  0) value += P; return *this; }
+    Modular<P>& operator -= (const Modular<P>& m)       { value -= m.value; if (value < 0)  value += P; return *this; }
     Modular<P>  operator -  (const Modular<P>& m) const { Modular<P> r = *this; return r -= m; }
     Modular<P>  operator -                     () const { return Modular<P>(-value); }
 
-    Modular<P>& operator *= (const Modular<P> &m)       { value = value * 1ll * m.value % P; return *this; }
+    Modular<P>& operator *= (const Modular<P>& m)       { value = value * 1ll * m.value % P; return *this; }
     Modular<P>  operator *  (const Modular<P>& m) const { Modular<P> r = *this; return r *= m; }
 
-    Modular<P>& operator /= (const Modular<P> &m)       { return *this *= m.inv(); }
+    Modular<P>& operator /= (const Modular<P>& m)       { return *this *= m.inv(); }
     Modular<P>  operator /  (const Modular<P>& m) const { Modular<P> r = *this; return r /= m; }
 
     Modular<P>& operator ++                    ()       { return *this += 1; }
