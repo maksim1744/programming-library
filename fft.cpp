@@ -33,6 +33,7 @@ vector<int> reversed = {0};
 void update_n(int n) {
     assert((n & (n - 1)) == 0);
     int cur = reversed.size();
+    if (n <= cur) return;
     reversed.resize(n);
     w.resize(n + 1);
     while (cur < n) {
@@ -53,9 +54,11 @@ void fft_internal(vector<Complex> &v, int from, int n, bool inv) {
     update_n(n);
     int N = reversed.size();
 
+    int d = __lg(N) - __lg(n);
+
     for (int i = 1; i < n; ++i)
-        if (i < (reversed[i] >> (N - n)))
-            swap(v[from + i], v[from + (reversed[i] >> (N - n))]);
+        if (i < (reversed[i] >> d))
+            swap(v[from + i], v[from + (reversed[i] >> d)]);
 
     for (int ln = 1; ln < n; ln <<= 1) {
         int step = (inv ? -N : N) / (ln * 2);
