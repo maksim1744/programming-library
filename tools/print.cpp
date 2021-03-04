@@ -4,7 +4,7 @@ vector<string> _split_names_(const string &s) {
     string brackets;
     vector<string> res;
     string token;
-    int ind = 0;
+    size_t ind = 0;
     while (ind < s.size()) {
         if (s[ind] == ',' && brackets.empty()) {
             res.push_back(token);
@@ -17,7 +17,9 @@ vector<string> _split_names_(const string &s) {
         token.push_back(s[ind]);
         if (s[ind] == '[' || s[ind] == '{' || s[ind] == '(')
             brackets.push_back(s[ind]);
-        else if (!brackets.empty() && (brackets.back() == '[' && s[ind] == ']' || brackets.back() == '(' && s[ind] == ')' || brackets.back() == '{' && s[ind] == '}'))
+        else if (!brackets.empty() && ((brackets.back() == '[' && s[ind] == ']') ||
+                                       (brackets.back() == '(' && s[ind] == ')') ||
+                                       (brackets.back() == '{' && s[ind] == '}')))
             brackets.pop_back();
         ++ind;
     }
@@ -241,9 +243,9 @@ bool _show_unique_(string name, vector<vector<T>> v) {
 }
 
 template<typename T>
-bool _show_unique_(string name, T x) { return false; }
+bool _show_unique_(__attribute__((unused)) string name, __attribute__((unused)) T x) { return false; }
 
-void _show_(int vals, vector<string>::const_iterator it) {}
+void _show_(__attribute__((unused)) int vals, __attribute__((unused)) vector<string>::const_iterator it) {}
 
 template<typename T, typename... Args>
 void _show_(int vals, vector<string>::const_iterator it, T arg, Args... args) {
