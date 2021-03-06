@@ -1,150 +1,129 @@
-long long mod = 998244353, g = 3, ginv = 332748118, inv2 = (mod + 1) / 2;
+namespace ntt {
+// TODO: square
 
-long long mpow(long long a, long long p, long long mod = mod) {
-    long long res = 1;
-    while (p) {
-        if (p & 1) res = res * a % mod;
-        p >>= 1;
-        a = a * a % mod;
-    }
-    return res;
-}
+Mint g = 0;  // set to something, or leave at 0 to calculate at runtime, g^(max power of 2 in mod-1) == 1
+int maxn = -1;
 
-long long findG(long long mod = mod) {
-    vector<long long> d;
-    long long n = mod - 1;
-    if (!(n & 1)) {
-        d.push_back(2);
-        while (!(n & 1)) {
-            n >>= 1;
-        }
+vector<Mint> buf1;
+vector<Mint> buf2;
+
+vector<int> reversed = {0};
+
+void init_g() {
+    int phi = (int)Mint(-1);  // mod - 1
+    maxn = 1;
+    while ((phi & 1) == 0) {
+        maxn <<= 1;
+        phi >>= 1;
     }
-    long long p = 3;
-    while (n > 1) {
-        if (n % p == 0) {
-            d.push_back(p);
-            while (n % p == 0) {
-                n /= p;
-            }
-        }
-        p += 2;
-    }
-    n = mod - 1;
-    for (auto& item : d) {
-        item = n / item;
-    }
-    long long g = 2;
-    while (true) {
-        bool ok = true;
-        for (auto k : d) {
-            if (mpow(g, k, mod) == 1) {
-                ok = false;
+
+    if (g == 0) {
+        while (true) {
+            Mint v = pow(g, maxn / 2);
+            if (v != 1 && v * v == 1)
                 break;
-            }
+            ++g;
         }
-        if (ok) {
-            break;
-        }
-        ++g;
     }
-    return g;
+
+    assert(pow(g, maxn) == 1 && pow(g, maxn / 2) != 1);
 }
 
-vector<long long> ntt(vector<long long>& v, bool inv = false) {
-    if (v.size() == 1) {
-        return v;
+void update_n(int n) {
+    if (maxn == -1)
+        init_g();
+    assert(n <= maxn);
+    assert((n & (n - 1)) == 0);
+    int cur = reversed.size();
+    if (n <= cur) return;
+    reversed.resize(n);
+    while (cur < n) {
+        for (int i = 0; i < cur; ++i)
+            reversed[i] <<= 1;
+        for (int i = cur; i < (cur << 1); ++i)
+            reversed[i] = reversed[i - cur] ^ 1;
+        cur *= 2;
     }
-    int n = 1;
-    while (n < v.size()) {
-        n <<= 1;
-    }
-    v.resize(n, 0);
-    assert(mod % n == 1);
+}
 
-    long long w0;
-    if (inv) {
-        w0 = mpow(ginv, (mod - 1) / n, mod);
-    } else {
-        w0 = mpow(g, (mod - 1) / n, mod);
-    }
+void ntt_internal(vector<Mint> &v, int from, int n, bool inv) {
+    update_n(n);
+    int N = reversed.size();
 
-    n /= 2;
-    int k = 0, n1 = 2 * n;
-    while (n1 > 1) {
-        n1 >>= 1;
-        ++k;
-    }
+    int d = __lg(N) - __lg(n);
 
-    vector<long long> w(2 * n);
-    w[0] = 1;
-    w[1] = w0;
-    for (int i = 2; i < 2 * n; ++i) {
-        if (i >= n) {
-            w[i] = mod - w[i - n];
-        } else {
-            w[i] = w[i / 2] * w[i - i / 2] % mod;
-        }
-    }
-    vector<int> ind(2 * n, 0);
-    ind[1] = 1 << (k - 1);
-    int id = 2;
-    for (int i = 1; i < k; ++i) {
-        int z = (1 << i);
-        for (int j = 0; j < z; ++j) {
-            ind[id] = (ind[id - z]) + (1 << (k - 1 - i));
-            ++id;
-        }
-    }
-    vector<long long> v1(n * 2);
-    for (int i = 0; i < 2 * n; ++i) {
-        v1[i] = (v[ind[i]]);
-    }
-    for (int i = k - 1; i >= 0; --i) {
-        int cnt = (1 << i);
-        int sz = (1 << (k - i));
-        int k1 = sz / 2 - 1;
-        for (int j = 0; j < cnt; ++j) {
-            int k2 = sz * j;
-            vector<long long> va(v1.begin() + sz * j, v1.begin() + sz * j + sz / 2);
-            vector<long long> vb(v1.begin() + sz * j + sz / 2, v1.begin() + sz * j + sz);
-            for (int u = 0; u < sz; ++u) {
-                v1[k2 + u] = (va[u & k1] + w[u << i] * vb[u & k1]) % mod;
+    for (int i = 1; i < n; ++i)
+        if (i < (reversed[i] >> d))
+            swap(v[from + i], v[from + (reversed[i] >> d)]);
+
+    for (int ln = 1; ln < n; ln <<= 1) {
+        Mint ww;
+        ww = pow(g, maxn / (ln * 2));
+        if (inv)
+            ww = Mint(1) / ww;
+        for (int i = 0; i < n; i += (ln << 1)) {
+            Mint w = 1;
+            for (int j = 0; j < ln; ++j) {
+                Mint y = v[from + i + j + ln] * w;
+                w *= ww;
+                v[from + i + j + ln] = v[from + i + j] - y;
+                v[from + i + j]      = v[from + i + j] + y;
             }
         }
     }
 
     if (inv) {
-        ll ip2 = mpow(inv2, k);
-        for (int i = 0; i < v1.size(); ++i) {
-            v1[i] = v1[i] * ip2 % mod;
-        }
+        Mint ni = Mint(1) / n;
+        for (int i = 0; i < n; ++i)
+            v[from + i] *= ni;
     }
-    return v1;
 }
 
-vector<long long> mul(vector<long long>& a, vector<long long>& b) {
-    int n = 1;
-    while (n < a.size() + b.size() - 1) {
-        n <<= 1;
+vector<Mint> ntt(const vector<Mint> &v, int n = -1) {
+    if (n == -1) {
+        n = 1;
+        while (n < v.size()) n <<= 1;
     }
-    a.resize(n, 0);
-    b.resize(n, 0);
-    vector<long long> ntta = ntt(a), nttb = ntt(b);
-    for (int i = 0; i < n; ++i) {
-        ntta[i] = ntta[i] * nttb[i] % mod;
-    }
-    return ntt(ntta, true);
+    assert(v.size() <= n);
+    buf1.assign(n, 0);
+    for (int i = 0; i < v.size(); ++i)
+        buf1[i] = v[i];
+    ntt_internal(buf1, 0, n, false);
+    return buf1;
 }
 
-vector<long long> sqr(vector<long long>& a) {
-    int n = 1;
-    while (n < a.size() * 2 - 1) {
-        n <<= 1;
-    }
-    a.resize(n, 0);
-    vector<long long> ntta = ntt(a);
-    for (int i = 0; i < n; ++i) {
-        ntta[i] = ntta[i] * ntta[i] % mod;
-    }
-    return ntt(ntta, true);
+vector<Mint> ntti(const vector<Mint> &v) {
+    assert(!v.empty() && (v.size() & (v.size() - 1)) == 0);
+    buf1.resize(v.size());
+    for (int i = 0; i < v.size(); ++i)
+        buf1[i] = v[i];
+    ntt_internal(buf1, 0, buf1.size(), true);
+    return buf1;
 }
+
+vector<Mint> multiply(const vector<Mint> &a, const vector<Mint> &b) {
+    if (a.empty() || b.empty()) return {};
+    int n = 2;
+    while (n < a.size() + b.size() - 1) n <<= 1;
+
+    buf1.assign(n, 0);
+    for (int i = 0; i < a.size(); ++i)
+        buf1[i] = a[i];
+
+    buf2.assign(n, 0);
+    for (int i = 0; i < b.size(); ++i)
+        buf2[i] = b[i];
+
+    ntt_internal(buf1, 0, n, false);
+    ntt_internal(buf2, 0, n, false);
+
+    for (int i = 0; i < n; ++i)
+        buf1[i] *= buf2[i];
+
+    ntt_internal(buf1, 0, n, true);
+
+    buf1.resize(a.size() + b.size() - 1);
+    return buf1;
+}
+
+} // ntt
