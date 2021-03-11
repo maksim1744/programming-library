@@ -278,8 +278,8 @@ void _show_line_number_(int num) {
 
 #define show(args...) { \
     _show_line_number_(__LINE__); \
-    auto names = _split_names_(#args); \
-    _show_(names.size(), names.begin(), args); \
+    auto _names_ = _split_names_(#args); \
+    _show_(_names_.size(), _names_.begin(), args); \
     cerr << endl; \
 }
 
