@@ -26,6 +26,10 @@ struct VarModular {
     bool        operator == (const VarModular& m) const { return value == m.value; }
     bool        operator != (const VarModular& m) const { return value != m.value; }
 
+    explicit    operator       int() const { return value; }
+    explicit    operator      bool() const { return value; }
+    explicit    operator long long() const { return value; }
+
     value_type norm(ll k) {
         if (!(-mod <= k && k < mod)) k %= mod;
         if (k < 0) k += mod;

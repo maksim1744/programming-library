@@ -26,6 +26,12 @@ struct Modular {
     bool        operator == (const Modular<P>& m) const { return value == m.value; }
     bool        operator != (const Modular<P>& m) const { return value != m.value; }
 
+    explicit    operator       int() const { return value; }
+    explicit    operator      bool() const { return value; }
+    explicit    operator long long() const { return value; }
+
+    static value_type mod()                { return     P; }
+
     value_type norm(ll k) {
         if (!(-P <= k && k < P)) k %= P;
         if (k < 0) k += P;
