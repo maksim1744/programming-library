@@ -5,6 +5,27 @@
 //    -1, if n has odd number of primes
 //     0, if n is divisible by a square
 ll calc_mertens(ll n) {
+    ll y = n / (ll)pow(n, 0.33);
+
+    vector<int> mu(y + 1, -1); mu[0] = 0; mu[1] = 1;
+    {
+        vector<bool> isp(y + 1, true); isp[0] = isp[1] = false;
+        vector<int> mn(y + 1);
+        for (int i = 2; i * i <= y; ++i)
+            if (isp[i])
+                for (int j = i * i; j <= y; j += i)
+                    isp[j] = false, mn[j] = i;
+        for (int i = 2; i <= y; ++i)
+            if (!isp[i])
+                mu[i] = -mu[i / mn[i]];
+        for (int i = 2; i * i <= y; ++i)
+            if (isp[i])
+                for (int j = i * i; j <= y; j += i * i)
+                    mu[j] = 0;
+    }
+    for (int i = 1; i < mu.size(); ++i)
+        mu[i] += mu[i - 1];
+
     vector<ll> v;
     v.reserve((int)sqrt(n) * 2 + 20);
     ll sq;
@@ -25,8 +46,12 @@ ll calc_mertens(ll n) {
         if (x <= sq) return (int)x - 1;
         else         return (int)(v.size() - (n / x));
     };
-    s[0] = 1;
-    for (int i = 1; i < v.size(); ++i) {
+
+    for (int i = 0; i < v.size(); ++i) {
+        if (v[i] <= y) {
+            s[i] = mu[v[i]];
+            continue;
+        }
         ll sq = sqrt(v[i]);
         assert(sq * sq <= v[i] && (sq + 1) * (sq + 1) > v[i]);
         ll mid = v[i] / sq;
