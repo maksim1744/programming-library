@@ -139,8 +139,7 @@ template<>
 struct printer<__int128> {
 static string _to_string_(__int128 v) {
     __uint128_t k = v;
-    ++k;
-    if (k == 0) return "-170141183460469231731687303715884105728";
+    if (k == (((__uint128_t)1) << 127)) return "-170141183460469231731687303715884105728";
     string result;
     if (v < 0) {
         result += "-";
