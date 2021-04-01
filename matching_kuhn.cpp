@@ -37,17 +37,17 @@ vector<pair<int, int>> find_matching(vector<vector<int>>& g, vector<int> a) {
     return result;
 }
 
-void dominanting_set_dfs(int v, vector<vector<int>>& g, vector<int>& with, vector<bool>& u,
-                                                                           vector<bool>& take) {
+void dominating_set_dfs(int v, vector<vector<int>>& g, vector<int>& with, vector<bool>& u,
+                                                                          vector<bool>& take) {
     u[v] = true;
     for (auto k : g[v]) {
         take[k] = true;
         if (!u[with[k]])
-            dominanting_set_dfs(with[k], g, with, u, take);
+            dominating_set_dfs(with[k], g, with, u, take);
     }
 }
 
-vector<int> find_dominanting_set(vector<vector<int>>& g, vector<int>& a) {
+vector<int> find_dominating_set(vector<vector<int>>& g, vector<int>& a) {
     auto matching = find_matching(g, a);
     vector<int> with(g.size(), -1);
     for (auto edge : matching) {
@@ -58,7 +58,7 @@ vector<int> find_dominanting_set(vector<vector<int>>& g, vector<int>& a) {
     vector<bool> take(g.size(), false);
     for (auto v : a)
         if (with[v] == -1)
-            dominanting_set_dfs(v, g, with, u, take);
+            dominating_set_dfs(v, g, with, u, take);
     for (auto e : matching)
         if (!take[e.second])
             take[e.first] = true;
@@ -73,7 +73,7 @@ vector<int> find_dominanting_set(vector<vector<int>>& g, vector<int>& a) {
 vector<int> find_independent_set(vector<vector<int>>& g, vector<int>& a) {
     vector<int> result;
     vector<bool> u(g.size(), false);
-    for (auto v : find_dominanting_set(g, a))
+    for (auto v : find_dominating_set(g, a))
         u[v] = true;
     for (int i = 0; i < g.size(); ++i)
         if (!u[i])
