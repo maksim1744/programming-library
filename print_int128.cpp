@@ -1,4 +1,5 @@
 string to_string(__int128 x) {
+    if (x == 0) return "0";
     __uint128_t k = x;
     if (k == (((__uint128_t)1) << 127)) return "-170141183460469231731687303715884105728";
     string result;
