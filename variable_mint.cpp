@@ -5,14 +5,14 @@ struct VarModular {
 
     VarModular(ll k = 0) : value(norm(k)) {}
 
-    friend VarModular& operator += (      VarModular &n, const VarModular& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
+    friend VarModular& operator += (      VarModular &n, const VarModular& m) { n.value += m.value; if (n.value >= mod) n.value -= mod; return n; }
     friend VarModular  operator +  (const VarModular &n, const VarModular& m) { VarModular r = n; return r += m; }
 
-    friend VarModular& operator -= (      VarModular &n, const VarModular& m) { n.value -= m.value; if (n.value < 0)  n.value += P; return n; }
+    friend VarModular& operator -= (      VarModular &n, const VarModular& m) { n.value -= m.value; if (n.value < 0)    n.value += mod; return n; }
     friend VarModular  operator -  (const VarModular &n, const VarModular& m) { VarModular r = n; return r -= m; }
     friend VarModular  operator -  (const VarModular &n)                      { return VarModular(-n.value); }
 
-    friend VarModular& operator *= (      VarModular &n, const VarModular& m) { n.value = n.value * 1ll * m.value % P; return n; }
+    friend VarModular& operator *= (      VarModular &n, const VarModular& m) { n.value = reduce(n.value * 1ll * m.value); return n; }
     friend VarModular  operator *  (const VarModular &n, const VarModular& m) { VarModular r = n; return r *= m; }
 
     friend VarModular& operator /= (      VarModular &n, const VarModular& m) { return n *= m.inv(); }
@@ -40,6 +40,15 @@ struct VarModular {
         value_type a = value, b = mod, x = 0, y = 1;
         while (a != 0) { value_type k = b / a; b -= k * a; x -= k * y; swap(a, b); swap(x, y); }
         return VarModular(x);
+    }
+
+    static value_type reduce(uint64_t a) {
+        static uint64_t m = (__uint128_t(1) << 64) / mod;
+        uint64_t q = ((__uint128_t(m) * a) >> 64);
+        a -= q * mod;
+        if (a >= mod)
+            a -= mod;
+        return a;
     }
 };
 VarModular pow(VarModular m, ll p) {
