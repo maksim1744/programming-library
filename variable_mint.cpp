@@ -5,26 +5,26 @@ struct VarModular {
 
     VarModular(ll k = 0) : value(norm(k)) {}
 
-    VarModular& operator += (const VarModular& m)       { value += m.value; if (value >= mod) value -= mod; return *this; }
-    VarModular  operator +  (const VarModular& m) const { VarModular r = *this; return r += m; }
+    friend VarModular& operator += (      VarModular &n, const VarModular& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
+    friend VarModular  operator +  (const VarModular &n, const VarModular& m) { VarModular r = n; return r += m; }
 
-    VarModular& operator -= (const VarModular& m)       { value -= m.value; if (value < 0)    value += mod; return *this; }
-    VarModular  operator -  (const VarModular& m) const { VarModular r = *this; return r -= m; }
-    VarModular  operator -                     () const { return VarModular(-value); }
+    friend VarModular& operator -= (      VarModular &n, const VarModular& m) { n.value -= m.value; if (n.value < 0)  n.value += P; return n; }
+    friend VarModular  operator -  (const VarModular &n, const VarModular& m) { VarModular r = n; return r -= m; }
+    friend VarModular  operator -  (const VarModular &n)                      { return VarModular(-n.value); }
 
-    VarModular& operator *= (const VarModular& m)       { value = value * 1ll * m.value % mod; return *this; }
-    VarModular  operator *  (const VarModular& m) const { VarModular r = *this; return r *= m; }
+    friend VarModular& operator *= (      VarModular &n, const VarModular& m) { n.value = n.value * 1ll * m.value % P; return n; }
+    friend VarModular  operator *  (const VarModular &n, const VarModular& m) { VarModular r = n; return r *= m; }
 
-    VarModular& operator /= (const VarModular& m)       { return *this *= m.inv(); }
-    VarModular  operator /  (const VarModular& m) const { VarModular r = *this; return r /= m; }
+    friend VarModular& operator /= (      VarModular &n, const VarModular& m) { return n *= m.inv(); }
+    friend VarModular  operator /  (const VarModular &n, const VarModular& m) { VarModular r = n; return r /= m; }
 
     VarModular& operator ++                    ()       { return *this += 1; }
     VarModular& operator --                    ()       { return *this -= 1; }
     VarModular  operator ++                 (int)       { VarModular r = *this; *this += 1; return r; }
     VarModular  operator --                 (int)       { VarModular r = *this; *this -= 1; return r; }
 
-    bool        operator == (const VarModular& m) const { return value == m.value; }
-    bool        operator != (const VarModular& m) const { return value != m.value; }
+    friend bool operator == (const VarModular &n, const VarModular& m) { return n.value == m.value; }
+    friend bool operator != (const VarModular &n, const VarModular& m) { return n.value != m.value; }
 
     explicit    operator       int() const { return value; }
     explicit    operator      bool() const { return value; }

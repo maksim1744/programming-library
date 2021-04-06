@@ -5,32 +5,32 @@ struct Modular {
 
     Modular(ll k = 0) : value(norm(k)) {}
 
-    Modular<P>& operator += (const Modular<P>& m)       { value += m.value; if (value >= P) value -= P; return *this; }
-    Modular<P>  operator +  (const Modular<P>& m) const { Modular<P> r = *this; return r += m; }
+    friend Modular<P>& operator += (      Modular<P> &n, const Modular<P>& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
+    friend Modular<P>  operator +  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r += m; }
 
-    Modular<P>& operator -= (const Modular<P>& m)       { value -= m.value; if (value < 0)  value += P; return *this; }
-    Modular<P>  operator -  (const Modular<P>& m) const { Modular<P> r = *this; return r -= m; }
-    Modular<P>  operator -                     () const { return Modular<P>(-value); }
+    friend Modular<P>& operator -= (      Modular<P> &n, const Modular<P>& m) { n.value -= m.value; if (n.value < 0)  n.value += P; return n; }
+    friend Modular<P>  operator -  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r -= m; }
+    friend Modular<P>  operator -  (const Modular<P> &n)                      { return Modular<P>(-n.value); }
 
-    Modular<P>& operator *= (const Modular<P>& m)       { value = value * 1ll * m.value % P; return *this; }
-    Modular<P>  operator *  (const Modular<P>& m) const { Modular<P> r = *this; return r *= m; }
+    friend Modular<P>& operator *= (      Modular<P> &n, const Modular<P>& m) { n.value = n.value * 1ll * m.value % P; return n; }
+    friend Modular<P>  operator *  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r *= m; }
 
-    Modular<P>& operator /= (const Modular<P>& m)       { return *this *= m.inv(); }
-    Modular<P>  operator /  (const Modular<P>& m) const { Modular<P> r = *this; return r /= m; }
+    friend Modular<P>& operator /= (      Modular<P> &n, const Modular<P>& m) { return n *= m.inv(); }
+    friend Modular<P>  operator /  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r /= m; }
 
     Modular<P>& operator ++                    ()       { return *this += 1; }
     Modular<P>& operator --                    ()       { return *this -= 1; }
     Modular<P>  operator ++                 (int)       { Modular<P> r = *this; *this += 1; return r; }
     Modular<P>  operator --                 (int)       { Modular<P> r = *this; *this -= 1; return r; }
 
-    bool        operator == (const Modular<P>& m) const { return value == m.value; }
-    bool        operator != (const Modular<P>& m) const { return value != m.value; }
+    friend bool operator == (const Modular<P> &n, const Modular<P>& m) { return n.value == m.value; }
+    friend bool operator != (const Modular<P> &n, const Modular<P>& m) { return n.value != m.value; }
 
     explicit    operator       int() const { return value; }
     explicit    operator      bool() const { return value; }
     explicit    operator long long() const { return value; }
 
-    static value_type mod()                { return     P; }
+    constexpr static value_type mod()      { return     P; }
 
     value_type norm(ll k) {
         if (!(-P <= k && k < P)) k %= P;
