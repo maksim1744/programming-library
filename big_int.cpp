@@ -99,6 +99,9 @@ struct Big {
         res.norm();
         return res;
     }
+    Big &operator %= (const Big &other) {
+        return *this = *this % other;
+    }
 
     int operator % (int m) const {
         long long p = 1;
@@ -306,4 +309,12 @@ istream &operator >> (istream &i, Big &b) {
     i >> s;
     b = Big(s);
     return i;
+}
+
+Big gcd(Big a, Big b) {
+    while (b != 0) {
+        a %= b;
+        swap(a, b);
+    }
+    return a;
 }
