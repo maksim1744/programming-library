@@ -1,434 +1,309 @@
-const long long base = 1e9;
 const int basen = 9;
+const int base = pow(10, basen);
+
+// uncomment to multiply large numbers with fft
+// basen should be even, at most 8
+// with doubles in fft and basen = 8 works up to Big.v.size() = 1e6 (but fails for 1e6 + 5e4)
+// #define BIGINT_USE_FFT
+
+// division works in n^2 * log(base), where n = Big.v.size()
 
 struct Big {
-    vector<long long> v;
+    vector<int> v;
     bool minus = false;
 
-    Big(long long n = 0) : minus(n < 0) {
-        n = abs(n);
-        while (n != 0) {
-            v.pb(n % base);
-            n /= base;
+    Big() {}
+    Big(long long k) {
+        if (k < 0) {
+            minus = true;
+            k = -k;
         }
-        if (v.empty()) {
-            v.pb(0);
+        while (k) {
+            v.push_back(k % base);
+            k /= base;
         }
     }
-
-    void norm() {
-        if (v.size() == 0)
-            v = {0};
-        else
-            while (v.size() > 1 && v.back() == 0)
-                v.pop_back();
-        if (v.size() == 1 && v[0] == 0)
-            minus = false;
-    }
-
-    void assign(string s) {
-        v.clear();
-        reverse(s.begin(), s.end());
-        if (s.back() == '-') {
-            s.pop_back();
+    Big(string s) {
+        if (s[0] == '-') {
+            s.erase(s.begin());
             minus = true;
         }
+        reverse(s.begin(), s.end());
         while (s.size() % basen != 0)
             s.push_back('0');
-        for (int i = 0; i < s.size() / basen; ++i) {
-            long long k = 0;
-            long long p10 = 1;
-            for (int j = 0; j < basen; ++j) {
-                k += p10 * (s[i * basen + j] - '0');
-                p10 *= 10;
+        reverse(s.begin(), s.end());
+        for (int i = 0; i < s.size(); i += basen)
+            v.push_back(stoi(s.substr(i, basen)));
+        reverse(v.begin(), v.end());
+        norm();
+    }
+
+    Big &operator += (const Big &other) {
+        if (minus == other.minus) {
+            _add_(v, other.v);
+        } else {
+            if (_comp_(other.v, v)) {
+                _sub_(v, other.v);
+            } else {
+                _sub2_(v, other.v);
+                minus ^= 1;
             }
-            v.push_back(k);
-        }
-    }
-
-    auto size() const {
-        return v.size();
-    }
-
-    auto& operator[] (int i) const {
-        return v[i];
-    }
-
-    auto& operator[] (int i) {
-        return v[i];
-    }
-
-    auto& back() {
-        return v.back();
-    }
-
-    void resize(int k) {
-        v.resize(k);
-    }
-
-    auto mul10(int k = 1) {
-        if (k / basen > 0) {
-            v.resize(v.size() + k / basen, 0);
-            for (int i = (int)v.size() - k / basen - 1; i >= 0; --i) {
-                v[i + k / basen] = v[i];
-            }
-            for (int i = 0; i < k / basen; ++i) {
-                v[i] = 0;
-            }
-            k %= basen;
-        }
-        long long p10 = 1;
-        for (int i = 0; i < k; ++i) {
-            p10 *= 10;
-        }
-        for (int i = 0; i < v.size(); ++i) {
-            v[i] *= p10;
-        }
-        long long rem = 0;
-        for (int i = 0; i < v.size(); ++i) {
-            v[i] += rem;
-            rem = v[i] / base;
-            v[i] %= base;
-        }
-        if (rem != 0)
-            v.push_back(rem);
-        return *this;
-    }
-
-    auto div10(int k = 1) {
-        if (k % basen != 0) {
-            mul10(basen - k % basen);
-            k += basen - k % basen;
-        }
-        if (k / basen >= v.size()) {
-            v = {0};
-            return *this;
-        }
-        for (int i = k / basen; i < v.size(); ++i) {
-            v[i - k / basen] = v[i];
-        }
-        for (int i = (int)v.size() - k / basen; i < v.size(); ++i) {
-            v[i] = 0;
         }
         norm();
         return *this;
     }
-
-    void add10(int k = 1) {
-        while (k / basen >= v.size())
-            v.push_back(0);
-        v.push_back(0);
-        int p10 = 1;
-        for (int i = 0; i < k % basen; ++i) {
-            p10 *= 10;
-        }
-        v[k / basen] += p10;
-        int i = k / basen;
-        long long rem = 0;
-        while (v[i] >= base || rem > 0) {
-            rem = v[i] / base;
-            v[i] %= base;
-            ++i;
-        }
-        norm();
+    Big operator + (const Big &other) const {
+        auto res = *this;
+        return res += other;
     }
 
-};
-
-istream& operator >> (istream& in, Big& b) {
-    string s;
-    cin >> s;
-    b.assign(s);
-    return in;
-}
-
-bool operator == (const Big &a, const Big &b) {
-    return a.minus == b.minus && a.v == b.v;
-}
-
-bool operator == (const Big &a, long long k) {
-    return (a == Big(k));
-}
-
-bool operator != (const Big &a, const Big &b) {
-    return !(a == b);
-}
-
-bool operator < (const Big &a, const Big &b) {
-    if (a.minus != b.minus)
-        return a.minus;
-    bool minus = a.minus;
-    if (a.size() != b.size())
-        return (a.size() < b.size())^minus;
-    for (int i = (int)a.size() - 1; i >= 0; --i)
-        if (a[i] != b[i])
-            return (a[i] < b[i])^minus;
-    return false;
-}
-
-bool operator > (const Big &a, const Big &b) {
-    return b < a;
-}
-
-bool operator <= (const Big &a, const Big &b) {
-    return !(b < a);
-}
-
-bool abs_comp(const Big& a, const Big& b) {
-    if (a.size() != b.size())
-        return (a.size() < b.size());
-    for (int i = (int)a.size() - 1; i >= 0; --i)
-        if (a[i] != b[i])
-            return (a[i] < b[i]);
-    return false;
-}
-
-Big operator - (const Big &a) {
-    auto res = a;
-    res.minus = !res.minus;
-    return a;
-}
-
-Big operator - (const Big &a, const Big &b);
-Big operator + (const Big &a, const Big &b) {
-    if (a.minus == b.minus) {
-        Big c;
-        c.resize(max(a.size(), b.size()) + 3);
-        for (int i = 0; i < a.size(); ++i) {
-            c[i] += a[i];
-        }
-        for (int i = 0; i < b.size(); ++i) {
-            c[i] += b[i];
-        }
-        for (int i = 0; i < c.size(); ++i) {
-            if (c[i] >= base) {
-                c[i] -= base;
-                c[i + 1]++;
-            }
-        }
-        c.minus = a.minus;
-        c.norm();
-        return c;
-    } else {
-        if (a.minus) {
-            return b - (-a);
-        } else {
-            return a - (-b);
-        }
+    Big operator - () const {
+        Big res = *this;
+        if (!v.empty()) res.minus ^= 1;
+        return res;
     }
-}
-
-Big operator - (const Big &aa, const Big &bb) {
-    if (aa.minus == bb.minus) {
-        bool minus = false;
-        Big a = aa;
-        Big b = bb;
-        if (abs_comp(a, b)) {
-            swap(a, b);
-            minus = true;
-        }
-        for (int i = 0; i < b.size(); ++i) {
-            a[i] -= b[i];
-        }
-        for (int i = 0; i < a.size(); ++i) {
-            if (a[i] < 0) {
-                a[i] += base;
-                a[i + 1]--;
-            }
-        }
-        a.minus ^= minus;
-        a.norm();
-        return a;
-    } else {
-        if (aa.minus) {
-            return -((-aa) + bb);
-        } else {
-            return aa + (-bb);
-        }
+    Big &operator -= (const Big &other) {
+        return *this += -other;
     }
-}
-
-Big operator * (const Big &a, const Big &b) {
-    auto t = clock();
-    Big c;
-    c.resize(a.size() + b.size() + 3);
-    c.minus = a.minus ^ b.minus;
-    for (int i = 0; i < a.size(); ++i) {
-        for (int j = 0; j < b.size(); ++j) {
-            c[i + j] += a[i] * b[j];
-            if (c[i + j] >= base) {
-                c[i + j + 1] += c[i + j] / base;
-                c[i + j] %= base;
-            }
-        }
+    Big operator - (const Big &other) const {
+        auto res = *this;
+        return res -= other;
     }
-    for (int i = 0; i < c.size(); ++i) {
-        if (c[i] >= base) {
-            c[i + 1] += c[i] / base;
-            c[i] %= base;
-        }
-    }
-    c.norm();
-    return c;
-}
 
-string to_string(const Big &a) {
-    if (a.size() == 1 && a[0] == 0) return "0";
-    string s = a.minus ? "-" : "";
-    s += to_string(a.v.back());
-    for (int i = (int)a.size() - 2; i >= 0; --i) {
-        string s1 = to_string(a[i]);
-        if (s1.size() % basen != 0) {
-            for (int j = 0; j < basen - (s1.size() % basen); ++j) {
-                s.push_back('0');
-            }
-        }
-        s += s1;
+    Big operator * (const Big &other) const {
+        if (v.empty() || other.v.empty()) return 0;
+        Big res;
+        res.v = _mult_(v, other.v);
+        res.minus = minus ^ other.minus;
+        return res;
     }
-    return s;
-}
-
-ostream &operator << (ostream &out, const Big &b) {
-    out << to_string(b);
-    return out;
-}
-
-pair<Big, Big> div(Big a, Big b) {
-    bool minus = a.minus ^ b.minus;
-    a.minus = false;
-    b.minus = false;
-    Big c;
-    if (a < b) {
-        return {c, a};
+    Big &operator *= (const Big &other) {
+        return *this = *this * other;
     }
-    int l = 0, r = a.size() * basen + 10;
-    while (r - l > 1) {
-        int m = (l + r) / 2;
-        b.mul10(m);
-        if (a < b) {
-            r = m;
-        } else {
-            l = m;
-        }
-        b.div10(m);
-    }
-    int shift = l;
-    while (!(a < b) && shift >= 0) {
-        b.mul10(shift);
-        while (!(a < b)) {
-            a = a - b;
-            c.add10(shift);
-        }
-        b.div10(shift);
-        --shift;
-    }
-    c.minus = a.minus^b.minus;
-    if (c == 0)
-        c.minus = false;
-    return {c, a};
-}
 
-Big operator / (const Big &a, const Big &b) {
-    return div(a, b).first;
-}
-
-Big operator / (const Big &a, int b) {
-    if (b < base) {
-        auto res = a;
-        for (int i = (int)a.size() - 1; i >= 0; --i) {
-            if (i != 0) {
-                res[i - 1] += res[i] % b * base;
-            }
-            res[i] /= b;
-        }
+    Big operator / (const Big &other) const {
+        Big res;
+        res.v = _div_(v, other.v).first;
+        res.minus = minus ^ other.minus;
         res.norm();
         return res;
     }
-    return div(a, b).first;
-}
-
-Big gcd(Big a, Big b) {
-    if (b < a)
-        swap(a, b);
-    if (a == 0)
-        return b;
-    b = div(b, a).second;
-    return gcd(b, a);
-}
-
-struct Rat {
-    Big a, b;
-
-    void norm() {
-        if (a == 0) {
-            a.minus = false;
-            b = Big(1);
-        } else {
-            if (b < 0) {
-                a.minus = !a.minus;
-                b.minus = !b.minus;
-            }
-            bool minus = a.minus;
-            a.minus = false;
-            Big d = gcd(a, b);
-            a = a / d;
-            b = b / d;
-            a.minus = minus;
-        }
+    Big &operator /= (const Big &other) {
+        return *this = *this / other;
     }
 
-    Rat(Big a = Big(0), Big b = Big(1)) : a(a), b(b) {
-        norm();
+    Big operator % (const Big &other) const {
+        Big res;
+        res.v = _div_(v, other.v).second;
+        res.minus = minus ^ other.minus;
+        res.norm();
+        return res;
+    }
+
+    int operator % (int m) const {
+        long long p = 1;
+        long long res = 0;
+        for (int k : v) {
+            res += k * p % m;
+            p = p * base % m;
+        }
+        return res % m;
+    }
+
+    void norm() {
+        while (!v.empty() && v.back() == 0)
+            v.pop_back();
+        if (v.empty())
+            minus = false;
+    }
+
+    bool operator < (const Big &other) const {
+        if (minus != other.minus) return minus;
+        if (minus) return _comp_(other.v, v);
+        else return _comp_(v, other.v);
+    }
+    bool operator > (const Big &other) const {
+        return other < *this;
+    }
+    bool operator <= (const Big &other) const {
+        return !(other < *this);
+    }
+    bool operator >= (const Big &other) const {
+        return !(*this < other);
+    }
+
+    bool operator == (const Big &other) const {
+        return minus == other.minus && v == other.v;
+    }
+    bool operator != (const Big &other) const {
+        return !(*this == other);
+    }
+
+  private:
+    static void _sub_(vector<int> &a, const vector<int> &b) {
+        a.resize(max(a.size(), b.size()) + 1, 0);
+        for (int i = 0; i < b.size(); ++i)
+            a[i] -= b[i];
+        for (int i = 0; i + 1 < a.size(); ++i) {
+            if (a[i] < 0) {
+                a[i] += base;
+                --a[i + 1];
+            }
+        }
+        assert(a.back() >= 0);
+        while (!a.empty() && a.back() == 0)
+            a.pop_back();
+    }
+
+    static void _sub2_(vector<int> &a, const vector<int> &b) {
+        a.resize(max(a.size(), b.size()) + 1, 0);
+        for (int i = 0; i < a.size(); ++i)
+            a[i] = (i < b.size() ? b[i] : 0) - a[i];
+        for (int i = 0; i + 1 < a.size(); ++i) {
+            if (a[i] < 0) {
+                a[i] += base;
+                --a[i + 1];
+            }
+        }
+        assert(a.back() >= 0);
+        while (!a.empty() && a.back() == 0)
+            a.pop_back();
+    }
+
+    static void _add_(vector<int> &a, const vector<int> &b) {
+        a.resize(max(a.size(), b.size()) + 1, 0);
+        for (int i = 0; i < b.size(); ++i)
+            a[i] += b[i];
+        for (int i = 0; i + 1 < a.size(); ++i) {
+            if (a[i] >= base) {
+                a[i] -= base;
+                ++a[i + 1];
+            }
+        }
+        while (!a.empty() && a.back() == 0)
+            a.pop_back();
+    }
+
+    static bool _comp_(const vector<int> &a, const vector<int> &b) {
+        if (a.size() != b.size())
+            return a.size() < b.size();
+        for (int i = (int)a.size() - 1; i >= 0; --i)
+            if (a[i] != b[i])
+                return a[i] < b[i];
+        return false;
+    }
+
+    static vector<int> _mult_(const vector<int> &a, const vector<int> &b) {
+        #ifdef BIGINT_USE_FFT
+        // tested on a.v.size() = 1e6, b.v.size() = C, fft is better on C > ~500 : https://ideone.com/kSYLd8
+        // if a.v.size() = b.v.size() = C, it's 380 : https://ideone.com/MJTo1Y
+        if (min(a.size(), b.size()) > 380) {
+            return _fft_mult_(a, b);
+        }
+        #endif
+
+        return _slow_mult_(a, b);
+    }
+
+    static vector<int> _slow_mult_(const vector<int> &a, const vector<int> &b) {
+        vector<long long> tmp(a.size() + b.size() + 1, 0);
+        for (int i = 0; i < a.size(); ++i) {
+            for (int j = 0; j < b.size(); ++j) {
+                long long prod = 1ll * a[i] * b[j];
+                long long div = prod / base;
+                tmp[i + j] += prod - base * div;
+                tmp[i + j + 1] += div;
+            }
+        }
+        for (int i = 0; i + 1 < tmp.size(); ++i) {
+            long long div = tmp[i] / base;
+            tmp[i + 1] += div;
+            tmp[i] -= div * base;
+        }
+        while (!tmp.empty() && tmp.back() == 0)
+            tmp.pop_back();
+        return vector<int>(tmp.begin(), tmp.end());
+    }
+
+    #ifdef BIGINT_USE_FFT
+    static vector<int> _fft_mult_(const vector<int> &a, const vector<int> &b) {
+        vector<int> ta(a.size() * 2), tb(b.size() * 2);
+        static_assert(basen % 2 == 0, "basen has to be even");
+        const static int M = pow(10, basen / 2);
+        for (int i = 0; i < a.size(); ++i) {
+            ta[i * 2] = a[i] % M;
+            ta[i * 2 + 1] = a[i] / M;
+        }
+        for (int i = 0; i < b.size(); ++i) {
+            tb[i * 2] = b[i] % M;
+            tb[i * 2 + 1] = b[i] / M;
+        }
+        auto tc = fft::multiply(ta, tb);
+        tc.resize(tc.size() / 2 * 2 + 10, 0);
+        for (int i = 0; i + 1 < tc.size(); ++i) {
+            tc[i + 1] += tc[i] / M;
+            tc[i] %= M;
+        }
+        vector<int> res(tc.size() / 2);
+        for (int i = 0; i < res.size(); ++i)
+            res[i] = tc[i * 2] + tc[i * 2 + 1] * M;
+        while (!res.empty() && res.back() == 0)
+            res.pop_back();
+        return res;
+    }
+    #endif
+
+    static pair<vector<int>, vector<int>> _div_(vector<int> a, vector<int> b) {
+        if (a.size() < b.size()) {
+            return {{}, a};
+        }
+        vector<int> res;
+        vector<int> c, c2;
+        for (int i = (int)a.size() - b.size(); i >= 0; --i) {
+            c.resize(b.size() + i);
+            for (int j = 0; j < b.size(); ++j) {
+                c[i + j] = b[j];
+            }
+            int L = 0, R = base;
+            while (R - L > 1) {
+                int C = (L + R) / 2;
+                c2 = _mult_(c, {C});
+                if (_comp_(a, c2)) {
+                    R = C;
+                } else {
+                    L = C;
+                }
+            }
+            c = _mult_(c, {L});
+            _sub_(a, c);
+            res.push_back(L);
+        }
+        reverse(res.begin(), res.end());
+        return {res, a};
     }
 };
 
-Rat operator - (Rat a) {
-    if (a.a == 0)
-        return a;
-    a.a.minus = !a.a.minus;
-    return a;
+string to_string(const Big &b) {
+    if (b.v.empty()) return "0";
+    string res;
+    for (int i = (int)b.v.size() - 1; i >= 0; --i) {
+        string t = to_string(b.v[i]);
+        if (!res.empty())
+            t = string(basen - t.size(), '0') + t;
+        res += t;
+    }
+    if (b.minus)
+        res.insert(res.begin(), '-');
+    return res;
 }
 
-Rat operator + (const Rat &m, const Rat &n) {
-    return Rat(m.a * n.b + m.b * n.a, m.b * n.b);
-}
+ostream &operator << (ostream &o, const Big &b) {
+    return o << to_string(b);
+};
 
-Rat operator - (const Rat &m, const Rat &n) {
-    return Rat(m.a * n.b - m.b * n.a, m.b * n.b);
-}
-
-Rat operator * (const Rat &m, const Rat &n) {
-    return Rat(m.a * n.a, m.b * n.b);
-}
-
-Rat operator / (const Rat &m, const Rat &n) {
-    return Rat(m.a * n.b, n.a * m.b);
-}
-
-bool operator == (const Rat &a, const Rat &b) {
-    return a.a == b.a && a.b == b.b;
-}
-
-bool operator != (const Rat &a, const Rat &b) {
-    return !(a == b);
-}
-
-bool operator < (const Rat &a, const Rat &b) {
-    return a.a * b.b < b.a *a.b;
-}
-
-bool operator > (const Rat &a, const Rat &b) {
-    return b < a;
-}
-
-bool operator <= (const Rat &a, const Rat &b) {
-    return !(b < a);
-}
-
-bool operator >= (const Rat &a, const Rat &b) {
-    return !(a < b);
-}
-
-string to_string(const Rat &r) {
-    return to_string(r.a) + "/" + to_string(r.b);
+istream &operator >> (istream &i, Big &b) {
+    string s;
+    i >> s;
+    b = Big(s);
+    return i;
 }
