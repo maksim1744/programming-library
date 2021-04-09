@@ -147,7 +147,7 @@ struct Big {
         a.resize(max(a.size(), b.size()) + 1, 0);
         for (int i = 0; i < b.size(); ++i)
             a[i] -= b[i];
-        for (int i = 0; i + 1 < a.size(); ++i) {
+        for (int i = 0; i + 1 < b.size() || a[i] < 0; ++i) {
             if (a[i] < 0) {
                 a[i] += base;
                 --a[i + 1];
@@ -177,7 +177,7 @@ struct Big {
         a.resize(max(a.size(), b.size()) + 1, 0);
         for (int i = 0; i < b.size(); ++i)
             a[i] += b[i];
-        for (int i = 0; i + 1 < a.size(); ++i) {
+        for (int i = 0; i + 1 < b.size() || a[i] >= base; ++i) {
             if (a[i] >= base) {
                 a[i] -= base;
                 ++a[i + 1];
