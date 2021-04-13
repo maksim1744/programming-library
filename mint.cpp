@@ -1,3 +1,4 @@
+namespace mint_ns {
 template<auto P>
 struct Modular {
     using value_type = decltype(P);
@@ -73,3 +74,5 @@ Mint C(int n, int k) {
     if (k < 0 || k > n) return 0;
     else return f[n] * fi[k] * fi[n - k];
 }
+}
+using namespace mint_ns;
