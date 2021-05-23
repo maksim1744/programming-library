@@ -1,14 +1,16 @@
 struct VarModular {
     using value_type = int;
-    static value_type mod;
+  private:
+    static value_type P;
+  public:
     value_type value;
 
     VarModular(ll k = 0) : value(norm(k)) {}
 
-    friend VarModular& operator += (      VarModular &n, const VarModular& m) { n.value += m.value; if (n.value >= mod) n.value -= mod; return n; }
+    friend VarModular& operator += (      VarModular &n, const VarModular& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
     friend VarModular  operator +  (const VarModular &n, const VarModular& m) { VarModular r = n; return r += m; }
 
-    friend VarModular& operator -= (      VarModular &n, const VarModular& m) { n.value -= m.value; if (n.value < 0)    n.value += mod; return n; }
+    friend VarModular& operator -= (      VarModular &n, const VarModular& m) { n.value -= m.value; if (n.value < 0)    n.value += P; return n; }
     friend VarModular  operator -  (const VarModular &n, const VarModular& m) { VarModular r = n; return r -= m; }
     friend VarModular  operator -  (const VarModular &n)                      { return VarModular(-n.value); }
 
@@ -30,27 +32,37 @@ struct VarModular {
     explicit    operator      bool() const { return value; }
     explicit    operator long long() const { return value; }
 
+    static value_type           mod()      { return     P; }
+
     value_type norm(ll k) {
-        if (!(-mod <= k && k < mod)) k %= mod;
-        if (k < 0) k += mod;
+        if (!(-P <= k && k < P)) k %= P;
+        if (k < 0) k += P;
         return k;
     }
 
     VarModular inv() const {
-        value_type a = value, b = mod, x = 0, y = 1;
+        value_type a = value, b = P, x = 0, y = 1;
         while (a != 0) { value_type k = b / a; b -= k * a; x -= k * y; swap(a, b); swap(x, y); }
         return VarModular(x);
     }
 
+  private:
+    static uint64_t m;
+  public:
+    static void set_mod(value_type mod) {
+        m = (__uint128_t(1) << 64) / mod;
+        P = mod;
+    }
+
     static value_type reduce(uint64_t a) {
-        static uint64_t m = (__uint128_t(1) << 64) / mod;
         uint64_t q = ((__uint128_t(m) * a) >> 64);
-        a -= q * mod;
-        if (a >= mod)
-            a -= mod;
+        a -= q * P;
+        if (a >= P)
+            a -= P;
         return a;
     }
 };
+uint64_t VarModular::m = 0;
 VarModular pow(VarModular m, ll p) {
     VarModular r(1);
     while (p) {
@@ -60,8 +72,8 @@ VarModular pow(VarModular m, ll p) {
     }
     return r;
 }
-VarModular::value_type VarModular::mod = 1'000'000'007;
-// use "VarModular::mod = [your value]" later
+VarModular::value_type VarModular::P;
+// use "VarModular::set_mod([your value])" later
 
 ostream& operator << (ostream& o, const VarModular &m) { return o << m.value; }
 istream& operator >> (istream& i,       VarModular &m) { ll k; i >> k; m.value = m.norm(k); return i; }
