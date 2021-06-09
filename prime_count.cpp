@@ -63,10 +63,16 @@ struct _count_primes_struct_t_ {
         }
         if (n < 100) return primes.size();
         ll s = n / y;
+        // pi(n) = phi(n, cbrt(n)) + pi(cbrt(n)) - F, where F is the number of composite number of
+        // the form p*q, where p >= q >= cbrt(n) (can be counted with two pointers)
+
+        // pi(cbrt(n))
         for (int p : primes) {
             if (p > s) break;
             ans++;
         }
+
+        // F
         int ssz = ans;
         int ptr = primes.size() - 1;
         for (int i = ssz; i < primes.size(); ++i) {
@@ -75,6 +81,9 @@ struct _count_primes_struct_t_ {
             if (ptr < i) break;
             ans -= ptr - i + 1;
         }
+
+        // phi
+        // store all queries phi(m, a) with m < n^2/3, calculate later with fenwick (sum in a rectangle)
         phi(n, ssz - 1);
         sort(queries.begin(), queries.end());
         int ind = 2;
