@@ -52,7 +52,7 @@ struct _count_primes_struct_t_ {
         for (int i = 2; i <= y; ++i) {
             if (mnprimes[i] == -1) {
                 mnprimes[i] = primes.size();
-                primes.pb(i);
+                primes.push_back(i);
             }
             for (int k = 0; k < primes.size(); ++k) {
                 int j = primes[k];
