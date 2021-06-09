@@ -63,6 +63,10 @@ struct _count_primes_struct_t_ {
         }
         if (n < 100) return primes.size();
         ll s = n / y;
+
+        // pi(n) -- prime counting function
+        // phi(n, a) -- number of integers from 1 to n which are not divisible by any prime from 0-th to a-th (p0=2)
+
         // pi(n) = phi(n, cbrt(n)) + pi(cbrt(n)) - F, where F is the number of composite number of
         // the form p*q, where p >= q >= cbrt(n) (can be counted with two pointers)
 
