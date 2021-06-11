@@ -1,9 +1,13 @@
 // n = size of recurrence = size of base (initial terms)
 // m = size of sequence given to find_recurrence()
+
 // find_recurrence() works in O(mn)
 // nth(ind) works O(n^2 log(ind))
+
 // it is possible to use nth() with precalculated recurrence,
 // use set_recurrence and set_base for that
+
+// rec should satisfy a[i] = sum_{j=0..rec.size()-1} a[i-j-1] * rec[j]
 
 template<typename T>
 struct BerlekampMassey {
