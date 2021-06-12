@@ -1,18 +1,19 @@
-// n = size of recurrence = size of base (initial terms)
-// m = size of sequence given to find_recurrence()
-
-// find_recurrence() works in O(mn)
-// nth(ind) works in O(n^2*log(ind)) or in O(n*logn*log(ind)) if ntt is enabled
-
-// it is possible to use nth() with precalculated recurrence,
-// use set_recurrence and set_base for that
-
-// rec should satisfy a[i] = sum_{j=0..rec.size()-1} a[i-j-1] * rec[j]
-
-// #define BERLEKAMP_USE_NTT
-
 template<typename T>
 struct BerlekampMassey {
+    // n = size of recurrence = size of base (initial terms)
+    // m = size of sequence given to find_recurrence()
+
+    // find_recurrence() works in O(mn)
+    // nth(ind) works in O(n^2*log(ind)) or in O(n*logn*log(ind)) if ntt is enabled
+
+    // it is possible to use nth() with precalculated recurrence,
+    // use set_recurrence and set_base for that
+
+    // rec should satisfy a[i] = sum_{j=0..rec.size()-1} a[i-j-1] * rec[j]
+
+    // #define BERLEKAMP_USE_NTT
+
+
     vector<T> rec;
     vector<T> base;
 
@@ -111,25 +112,29 @@ struct BerlekampMassey {
             reverse(rec_with_1.begin(), rec_with_1.end());
             rec_inv = poly_inv(rec_inv, rec_inv.size());
 
-            rec_inv = ntt::ntt(rec_inv, N);
-            rec_with_1 = ntt::ntt(rec_with_1, N / 2);
+            rec_inv.resize(N, 0);
+            ntt::ntt_internal(rec_inv, 0, N, false);
+            rec_with_1.resize(N / 2, 0);
+            ntt::ntt_internal(rec_with_1, 0, N / 2, false);
         }
 
         while (ind) {
             int cur_poly_sz = cur_poly.size();
-            cur_poly = ntt::ntt(cur_poly, N / 2);
+            cur_poly.resize(N / 2, 0);
+            ntt::ntt_internal(cur_poly, 0, N / 2, false);
             if (ind & 1) {
                 int res_sz = res.size();
-                res = ntt::ntt(res, N / 2);
+                res.resize(N / 2, 0);
+                ntt::ntt_internal(res, 0, N / 2, false);
                 for (int i = 0; i < N / 2; ++i)
                     res[i] *= cur_poly[i];
-                res = ntt::ntti(res);
+                ntt::ntt_internal(res, 0, N / 2, true);
                 res.resize(cur_poly_sz + res_sz - 1);
                 poly_mod_fast(res, rec_with_1, rec_inv, fsize, N);
             }
             for (int i = 0; i < N / 2; ++i)
                 cur_poly[i] *= cur_poly[i];
-            cur_poly = ntt::ntti(cur_poly);
+            ntt::ntt_internal(cur_poly, 0, N / 2, true);
             cur_poly.resize(cur_poly_sz * 2 - 1);
             poly_mod_fast(cur_poly, rec_with_1, rec_inv, fsize, N);
             ind >>= 1;
@@ -189,25 +194,24 @@ struct BerlekampMassey {
     void poly_mod_fast(vector<T> &a, const vector<T> &f, const vector<T> &fi, int fsize, int N) const {
         if (a.size() < fsize) return;
 
-        reverse(a.begin(), a.end());
         auto d = a;
-        d = ntt::ntt(d, N);
+        reverse(d.begin(), d.end());
+        d.resize(N, 0);
+        ntt::ntt_internal(d, 0, N, false);
         for (int i = 0; i < N; ++i)
             d[i] *= fi[i];
-        d = ntt::ntti(d);
+        ntt::ntt_internal(d, 0, N, true);
 
-        if (d.size() > a.size() - fsize + 1)
-            d.resize(a.size() - fsize + 1);
-
+        d.resize(a.size() - fsize + 1);
         reverse(d.begin(), d.end());
-        reverse(a.begin(), a.end());
 
-        d = ntt::ntt(d, N / 2);
+        d.resize(N / 2, 0);
+        ntt::ntt_internal(d, 0, N / 2, false);
         for (int i = 0; i < N / 2; ++i)
             d[i] *= f[i];
-        d = ntt::ntti(d);
+        ntt::ntt_internal(d, 0, N / 2, true);
 
-        for (int i = 0; i < min(a.size(), d.size()); ++i)
+        for (int i = 0; i < min({a.size(), d.size(), size_t(fsize - 1)}); ++i)
             a[i] -= d[i];
 
         a.resize(fsize - 1);
