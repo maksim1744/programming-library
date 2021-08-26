@@ -1,3 +1,4 @@
+namespace var_mint_ns {
 struct VarModular {
     using value_type = int;
   private:
@@ -5,28 +6,28 @@ struct VarModular {
   public:
     value_type value;
 
-    VarModular(ll k = 0) : value(norm(k)) {}
+    VarModular(long long k = 0) : value(norm(k)) {}
 
-    friend VarModular& operator += (      VarModular &n, const VarModular& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
-    friend VarModular  operator +  (const VarModular &n, const VarModular& m) { VarModular r = n; return r += m; }
+    friend VarModular& operator += (      VarModular& n, const VarModular& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
+    friend VarModular  operator +  (const VarModular& n, const VarModular& m) { VarModular r = n; return r += m; }
 
-    friend VarModular& operator -= (      VarModular &n, const VarModular& m) { n.value -= m.value; if (n.value < 0)    n.value += P; return n; }
-    friend VarModular  operator -  (const VarModular &n, const VarModular& m) { VarModular r = n; return r -= m; }
-    friend VarModular  operator -  (const VarModular &n)                      { return VarModular(-n.value); }
+    friend VarModular& operator -= (      VarModular& n, const VarModular& m) { n.value -= m.value; if (n.value < 0)    n.value += P; return n; }
+    friend VarModular  operator -  (const VarModular& n, const VarModular& m) { VarModular r = n; return r -= m; }
+    friend VarModular  operator -  (const VarModular& n)                      { return VarModular(-n.value); }
 
-    friend VarModular& operator *= (      VarModular &n, const VarModular& m) { n.value = reduce(n.value * 1ll * m.value); return n; }
-    friend VarModular  operator *  (const VarModular &n, const VarModular& m) { VarModular r = n; return r *= m; }
+    friend VarModular& operator *= (      VarModular& n, const VarModular& m) { n.value = reduce(n.value * 1ll * m.value); return n; }
+    friend VarModular  operator *  (const VarModular& n, const VarModular& m) { VarModular r = n; return r *= m; }
 
-    friend VarModular& operator /= (      VarModular &n, const VarModular& m) { return n *= m.inv(); }
-    friend VarModular  operator /  (const VarModular &n, const VarModular& m) { VarModular r = n; return r /= m; }
+    friend VarModular& operator /= (      VarModular& n, const VarModular& m) { return n *= m.inv(); }
+    friend VarModular  operator /  (const VarModular& n, const VarModular& m) { VarModular r = n; return r /= m; }
 
-    VarModular& operator ++                    ()       { return *this += 1; }
-    VarModular& operator --                    ()       { return *this -= 1; }
-    VarModular  operator ++                 (int)       { VarModular r = *this; *this += 1; return r; }
-    VarModular  operator --                 (int)       { VarModular r = *this; *this -= 1; return r; }
+    VarModular& operator ++ (   ) { return *this += 1; }
+    VarModular& operator -- (   ) { return *this -= 1; }
+    VarModular  operator ++ (int) { VarModular r = *this; *this += 1; return r; }
+    VarModular  operator -- (int) { VarModular r = *this; *this -= 1; return r; }
 
-    friend bool operator == (const VarModular &n, const VarModular& m) { return n.value == m.value; }
-    friend bool operator != (const VarModular &n, const VarModular& m) { return n.value != m.value; }
+    friend bool operator == (const VarModular& n, const VarModular& m) { return n.value == m.value; }
+    friend bool operator != (const VarModular& n, const VarModular& m) { return n.value != m.value; }
 
     explicit    operator       int() const { return value; }
     explicit    operator      bool() const { return value; }
@@ -34,7 +35,7 @@ struct VarModular {
 
     static value_type           mod()      { return     P; }
 
-    value_type norm(ll k) {
+    value_type norm(long long k) {
         if (!(-P <= k && k < P)) k %= P;
         if (k < 0) k += P;
         return k;
@@ -63,7 +64,7 @@ struct VarModular {
     }
 };
 uint64_t VarModular::m = 0;
-VarModular pow(VarModular m, ll p) {
+VarModular pow(VarModular m, long long p) {
     VarModular r(1);
     while (p) {
         if (p & 1) r *= m;
@@ -75,8 +76,8 @@ VarModular pow(VarModular m, ll p) {
 VarModular::value_type VarModular::P;
 // use "VarModular::set_mod([your value])" later
 
-ostream& operator << (ostream& o, const VarModular &m) { return o << m.value; }
-istream& operator >> (istream& i,       VarModular &m) { ll k; i >> k; m.value = m.norm(k); return i; }
+ostream& operator << (ostream& o, const VarModular& m) { return o << m.value; }
+istream& operator >> (istream& i,       VarModular& m) { long long k; i >> k; m.value = m.norm(k); return i; }
 string   to_string(const VarModular& m) { return to_string(m.value); }
 
 using Mint = VarModular;
@@ -93,3 +94,5 @@ Mint C(int n, int k) {
     if (k < 0 || k > n) return 0;
     else return f[n] * fi[k] * fi[n - k];
 }
+}
+using namespace var_mint_ns;

@@ -4,28 +4,28 @@ struct Modular {
     using value_type = decltype(P);
     value_type value;
 
-    Modular(ll k = 0) : value(norm(k)) {}
+    Modular(long long k = 0) : value(norm(k)) {}
 
-    friend Modular<P>& operator += (      Modular<P> &n, const Modular<P>& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
-    friend Modular<P>  operator +  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r += m; }
+    friend Modular<P>& operator += (      Modular<P>& n, const Modular<P>& m) { n.value += m.value; if (n.value >= P) n.value -= P; return n; }
+    friend Modular<P>  operator +  (const Modular<P>& n, const Modular<P>& m) { Modular<P> r = n; return r += m; }
 
-    friend Modular<P>& operator -= (      Modular<P> &n, const Modular<P>& m) { n.value -= m.value; if (n.value < 0)  n.value += P; return n; }
-    friend Modular<P>  operator -  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r -= m; }
-    friend Modular<P>  operator -  (const Modular<P> &n)                      { return Modular<P>(-n.value); }
+    friend Modular<P>& operator -= (      Modular<P>& n, const Modular<P>& m) { n.value -= m.value; if (n.value < 0)  n.value += P; return n; }
+    friend Modular<P>  operator -  (const Modular<P>& n, const Modular<P>& m) { Modular<P> r = n; return r -= m; }
+    friend Modular<P>  operator -  (const Modular<P>& n)                      { return Modular<P>(-n.value); }
 
-    friend Modular<P>& operator *= (      Modular<P> &n, const Modular<P>& m) { n.value = n.value * 1ll * m.value % P; return n; }
-    friend Modular<P>  operator *  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r *= m; }
+    friend Modular<P>& operator *= (      Modular<P>& n, const Modular<P>& m) { n.value = n.value * 1ll * m.value % P; return n; }
+    friend Modular<P>  operator *  (const Modular<P>& n, const Modular<P>& m) { Modular<P> r = n; return r *= m; }
 
-    friend Modular<P>& operator /= (      Modular<P> &n, const Modular<P>& m) { return n *= m.inv(); }
-    friend Modular<P>  operator /  (const Modular<P> &n, const Modular<P>& m) { Modular<P> r = n; return r /= m; }
+    friend Modular<P>& operator /= (      Modular<P>& n, const Modular<P>& m) { return n *= m.inv(); }
+    friend Modular<P>  operator /  (const Modular<P>& n, const Modular<P>& m) { Modular<P> r = n; return r /= m; }
 
-    Modular<P>& operator ++                    ()       { return *this += 1; }
-    Modular<P>& operator --                    ()       { return *this -= 1; }
-    Modular<P>  operator ++                 (int)       { Modular<P> r = *this; *this += 1; return r; }
-    Modular<P>  operator --                 (int)       { Modular<P> r = *this; *this -= 1; return r; }
+    Modular<P>& operator ++ (   ) { return *this += 1; }
+    Modular<P>& operator -- (   ) { return *this -= 1; }
+    Modular<P>  operator ++ (int) { Modular<P> r = *this; *this += 1; return r; }
+    Modular<P>  operator -- (int) { Modular<P> r = *this; *this -= 1; return r; }
 
-    friend bool operator == (const Modular<P> &n, const Modular<P>& m) { return n.value == m.value; }
-    friend bool operator != (const Modular<P> &n, const Modular<P>& m) { return n.value != m.value; }
+    friend bool operator == (const Modular<P>& n, const Modular<P>& m) { return n.value == m.value; }
+    friend bool operator != (const Modular<P>& n, const Modular<P>& m) { return n.value != m.value; }
 
     explicit    operator       int() const { return value; }
     explicit    operator      bool() const { return value; }
@@ -33,7 +33,7 @@ struct Modular {
 
     constexpr static value_type mod()      { return     P; }
 
-    value_type norm(ll k) {
+    value_type norm(long long k) {
         if (!(-P <= k && k < P)) k %= P;
         if (k < 0) k += P;
         return k;
@@ -45,7 +45,7 @@ struct Modular {
         return Modular<P>(x);
     }
 };
-template<auto P> Modular<P> pow(Modular<P> m, ll p) {
+template<auto P> Modular<P> pow(Modular<P> m, long long p) {
     Modular<P> r(1);
     while (p) {
         if (p & 1) r *= m;
@@ -55,8 +55,8 @@ template<auto P> Modular<P> pow(Modular<P> m, ll p) {
     return r;
 }
 
-template<auto P> ostream& operator << (ostream& o, const Modular<P> &m) { return o << m.value; }
-template<auto P> istream& operator >> (istream& i,       Modular<P> &m) { ll k; i >> k; m.value = m.norm(k); return i; }
+template<auto P> ostream& operator << (ostream& o, const Modular<P>& m) { return o << m.value; }
+template<auto P> istream& operator >> (istream& i,       Modular<P>& m) { long long k; i >> k; m.value = m.norm(k); return i; }
 template<auto P> string   to_string(const Modular<P>& m) { return to_string(m.value); }
 
 using Mint = Modular<1000000007>;
