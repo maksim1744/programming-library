@@ -39,7 +39,7 @@ struct segtree {
     int n = 1;
 
     segtree(int n = 1) : n(n) {
-        tree.resize(1 << (__lg(n - 1) + 2));
+        tree.resize(1 << (__lg(max(1, n - 1)) + 2));
     }
 
     template<typename T>
@@ -57,7 +57,7 @@ struct segtree {
     template<typename T>
     void build(const vector<T> &v) {
         n = v.size();
-        tree.resize(1 << (__lg(n - 1) + 2));
+        tree.resize(1 << (__lg(max(1, n - 1)) + 2));
         build(v, 0, 0, n - 1);
     }
 
