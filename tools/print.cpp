@@ -155,6 +155,21 @@ string _to_string_(T x) {
     return printer<T>::_to_string_(x);
 }
 
+size_t _indent_ = 0;
+const string _indent_string_ = "|  ";
+
+void _show_indent_() {
+    #ifdef SHOW_COLORS
+    cerr << "\e[1;30m";
+    #endif
+    for (size_t i = 0; i < _indent_; ++i) {
+        cerr << _indent_string_;
+    }
+    #ifdef SHOW_COLORS
+    cerr << "\e[m";
+    #endif
+}
+
 template<typename T>
 bool _show_unique_associative_container_(string name, T m) {
     if (m.empty()) return false;
@@ -172,7 +187,10 @@ bool _show_unique_associative_container_(string name, T m) {
         value_width = max(value_width, (int)values.back().size());
     }
     for (int i = 0; i < keys.size(); ++i) {
-        if (i != 0) cerr << string(padding, ' ');
+        if (i != 0) {
+            _show_indent_();
+            cerr << string(padding, ' ');
+        }
         cerr << std::left << setw(key_width) << keys[i] << ": " << values[i];
         if (i + 1 != keys.size())
             cerr << ",\n";
@@ -218,7 +236,10 @@ bool _show_unique_(string name, vector<vector<T>> v) {
     int total = accumulate(widths.begin(), widths.end(), 0);
     total += 2 * ((int)widths.size() - 1);
     for (int i = 0; i < v.size(); ++i) {
-        if (i != 0) cerr << string(padding, ' ');
+        if (i != 0) {
+            _show_indent_();
+            cerr << string(padding, ' ');
+        }
         cerr << "[";
         int left = total;
         for (int j = 0; j < v[i].size(); ++j) {
@@ -260,6 +281,7 @@ void _show_(int vals, vector<string>::const_iterator it, T arg, Args... args) {
 }
 
 void _show_line_number_(int num) {
+    _show_indent_();
     cerr << std::right;
     #ifdef SHOW_COLORS
     cerr << "\e[1;34m";
@@ -316,3 +338,60 @@ void _mclock_(string msg = "") {
     _show_line_number_(__LINE__); \
     _mclock_(); \
 }
+
+template<typename T>
+struct _dbgf_struct_ {
+    size_t line_n;
+    const string& f_name;
+    T f;
+    bool first = true;
+
+    _dbgf_struct_(size_t line_n, const string& f_name, T f) : line_n(line_n), f_name(f_name), f(std::move(f)) {}
+
+    void print_args() const {
+        cerr << ")";
+    }
+
+    template<typename A, typename... Args>
+    void print_args(const A& a, Args... args) {
+        if (!first)
+            cerr << ", ";
+        first = false;
+        cerr << _to_string_(a);
+        print_args(args...);
+    }
+
+    template<typename... Args>
+    auto operator()(Args... args) {
+        first = true;
+        _show_line_number_(line_n);
+        cerr << ' ' << f_name << "(";
+        print_args(args...);
+        cerr << endl;
+
+        ++_indent_;
+        auto result = f(args...);
+        --_indent_;
+
+        first = true;
+        _show_line_number_(line_n);
+        cerr << ' ' << f_name << "(";
+        print_args(args...);
+        cerr << " = " << _to_string_(result) << endl;
+
+        return result;
+    }
+};
+
+#define debugf(f) _dbgf_struct_(__LINE__, #f, f)
+
+template<typename T>
+auto _dbgv_(size_t line_n, const string& v_name, T v) {
+    vector<string> names = {v_name};
+    _show_line_number_(line_n);
+    _show_(names.size(), names.begin(), v);
+    cerr << endl;
+    return v;
+}
+
+#define debugv(v) _dbgv_(__LINE__, #v, v)
