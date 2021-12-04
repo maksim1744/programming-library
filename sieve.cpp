@@ -82,7 +82,8 @@ struct Sieve {
                     mn[i] = i;
                     if ((ll)i * i <= n)
                         for (int j = i * i; j <= n; j += i)
-                            mn[j] = i;
+                            if (mn[j] == -1)
+                                mn[j] = i;
                 }
             }
         }
