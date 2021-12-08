@@ -37,7 +37,7 @@ struct Matrix {
         return m[i];
     }
 
-    Matrix operator * (const Matrix &b) {
+    Matrix operator * (const Matrix &b) const {
         Matrix c;
         for (int i = 0; i < N; ++i) {
             for (int j = 0; j < N; ++j) {
@@ -62,7 +62,7 @@ struct Matrix {
         }
         return *this;
     }
-    Matrix operator * (const T &x) {
+    Matrix operator * (const T &x) const {
         Matrix a = *this;
         a *= x;
         return a;
@@ -77,7 +77,7 @@ struct Matrix {
         }
         return *this;
     }
-    Matrix operator / (const T &x) {
+    Matrix operator / (const T &x) const {
         Matrix a = *this;
         a /= x;
         return a;
@@ -91,7 +91,7 @@ struct Matrix {
         }
         return *this;
     }
-    Matrix operator + (const Matrix &other) {
+    Matrix operator + (const Matrix &other) const {
         Matrix a = *this;
         a += other;
         return a;
@@ -105,7 +105,7 @@ struct Matrix {
         }
         return *this;
     }
-    Matrix operator - (const Matrix &other) {
+    Matrix operator - (const Matrix &other) const {
         Matrix a = *this;
         a -= other;
         return a;
