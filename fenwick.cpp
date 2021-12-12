@@ -23,4 +23,18 @@ struct fenwick {
         if (l > r) return 0;
         return ask(r) - ask(l - 1);
     }
+
+    // find first i such that sum[0..i] >= x
+    int lower_bound(T x) {
+        int cur = 0;
+        T cur_sum = 0;
+        for (int k = K - 1; k >= 0; --k) {
+            int ind = cur | ((1 << k) - 1);
+            if (ind >= n) continue;
+            if (cur_sum + tree[ind] >= x) continue;
+            cur_sum += tree[ind];
+            cur |= (1 << k);
+        }
+        return cur;
+    }
 };
