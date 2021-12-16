@@ -1,3 +1,5 @@
+#include "macro_map.h"
+
 #define debug if (true)
 
 vector<string> _split_names_(const string &s) {
@@ -395,3 +397,25 @@ auto _dbgv_(size_t line_n, const string& v_name, T v) {
 }
 
 #define debugv(v) _dbgv_(__LINE__, #v, v)
+
+#define PRINT_FIELD(field) _o_ << ", " << #field << ": " << _to_string_(_s_.field);
+#define PRINT_STRUCT(_class_name_, _first_arg_, ...) \
+    _o_ << "[" << #_first_arg_ << ": " << _to_string_(_s_._first_arg_); \
+    __VA_OPT__(MAP(PRINT_FIELD, __VA_ARGS__);) \
+    _o_ << "]"; \
+
+#define OSTREAM(_class_name_, ...) ostream& operator<<(ostream& _o_, const _class_name_& _s_) { \
+    __VA_OPT__(PRINT_STRUCT(_class_name_, __VA_ARGS__)) \
+    return _o_; \
+}
+
+#define PRINT_FIELD0(field) _o_ << ", " << _to_string_(_s_.field);
+#define PRINT_STRUCT0(_class_name_, _first_arg_, ...) \
+    _o_ << "[" << _to_string_(_s_._first_arg_); \
+    __VA_OPT__(MAP(PRINT_FIELD0, __VA_ARGS__);) \
+    _o_ << "]"; \
+
+#define OSTREAM0(_class_name_, ...) ostream& operator<<(ostream& _o_, const _class_name_& _s_) { \
+    __VA_OPT__(PRINT_STRUCT0(_class_name_, __VA_ARGS__)) \
+    return _o_; \
+}
