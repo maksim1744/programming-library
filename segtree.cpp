@@ -1,3 +1,4 @@
+namespace segtree_ns {
 struct item {
     template<typename T>
     void init(const T &t, int l, int r) {
@@ -12,15 +13,7 @@ struct item {
         return res;
     }
 };
-
-string to_string(const item &i) {
-    stringstream ss;
-    ss << "[" << "]";
-    return ss.str();
-}
-ostream& operator << (ostream &o, const item &i) {
-    return o << to_string(i);
-}
+OSTREAM(item);
 
 struct segtree {
     vector<item> tree;
@@ -93,3 +86,27 @@ struct segtree {
         }
     }
 };
+
+ostream& operator << (ostream& o, segtree& tree) {
+#ifdef HOME
+    vector<item> items;
+    for (int i = 0; i < tree.n; ++i)
+        items.push_back(tree.ask(i, i));
+    const bool print_horizontal = true;
+    if (print_horizontal) {
+        for (int i = 0; i < items.size(); ++i) {
+            if (i != 0) o << " ";
+            o << items[i];
+        }
+    } else {
+        for (int i = 0; i < items.size(); ++i) {
+            o << '\n' << string(10, ' ');
+            o << items[i];
+        }
+    }
+#endif
+    return o;
+}
+
+}
+using namespace segtree_ns;
