@@ -3,8 +3,8 @@ struct Rational {
     T a, b;
     Rational(T a = 0, T b = 1) : a(a), b(b) { norm(); }
 
-    T floor() const { T res = a / b; if (a < 0 && res != b * res) --res; return res; }
-    T ceil()  const { T res = a / b; if (a > 0 && res != b * res) ++res; return res; }
+    T floor() const { T res = a / b; if (a < 0 && a != b * res) --res; return res; }
+    T ceil()  const { T res = a / b; if (a > 0 && a != b * res) ++res; return res; }
 
     friend Rational<T>& operator += (      Rational<T> &n, const Rational<T> &m) { return n = Rational(n.a * m.b + n.b * m.a, n.b * m.b); }
     friend Rational<T>  operator +  (const Rational<T> &n, const Rational<T> &m) { auto res = n; return res += m; }
@@ -18,13 +18,12 @@ struct Rational {
 
     // doesn't overflow
     friend bool operator <  (Rational<T> n, Rational<T> m) {
-        T a = n.floor(), b = m.floor(); if (a != b) return a < b;
-        n -= a; m -= b;
         while (true) {
-            if (n.b == m.b) return n.a < m.a;
+            T a = n.floor(), b = m.floor(); if (a != b) return a < b;
+            n -= a; m -= b;
+            if (n.b == m.b) return (n.a < m.a);
             if (n.a == 0) return true; else if (m.a == 0) return false;
             swap(n, m); swap(n.a, n.b); swap(m.a, m.b);
-            n.a %= n.b; m.a %= m.b;
         }
         return false;
     }
