@@ -2,9 +2,13 @@ template<typename T>
 struct fenwick {
     vector<T> tree;
     int n;
+    int K;
 
     fenwick(int n = 0) : n(n) {
         tree.assign(n, 0);
+        K = 0;
+        while ((1 << K) <= n)
+            ++K;
     }
 
     void add(int i, T k) {
