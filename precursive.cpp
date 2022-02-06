@@ -10,7 +10,8 @@ struct PRecursive {
     // it is possible to use nth() with precalculated recurrence,
     // use set_recurrence and set_base for that
 
-    // rec should satisfy a[i] = sum_{j=0..rec.size()-1} a[i-j-1] * sum_{k=0..rec[j].size()-1} rec[j][k]*i^k
+    // rec should satisfy a[i] =  (sum_{j=0..rec.size()-1} a[i-j-1] * sum_{k=0..rec[j+1].size()-1} rec[j+1][k]*i^k)
+    //                          / (sum_{k=0..rec[0].size()-1} rec[0][k]*i^k)
 
     // pass validate = x to use last x elements of a sequence for validation
     // use print() to print recurrence relation in a readable form
@@ -45,15 +46,17 @@ struct PRecursive {
         for (int sz = 0;; ++sz) {
             vector<vector<Mint>> A;
             for (int i = sz; i + validate < v.size(); ++i) {
-                vector<Mint> row(sz * (max_degree + 1) + 1);
-                row.back() = v[i];
-                for (int j = 0; j < sz; ++j) {
+                vector<Mint> row((sz + 1) * (max_degree + 1) + 1);
+                row.back() = 0;
+                for (int j = 0; j <= sz; ++j) {
                     T pw = 1;
                     for (int k = 0; k <= max_degree; ++k) {
-                        row[j * (max_degree + 1) + k] = v[i - j - 1] * pw;
+                        row[k * (sz + 1) + j] = v[i - j] * pw * (j == 0 ? -1 : 1);
                         pw *= i;
                     }
                 }
+                row.erase(row.begin()); // some element in denominator has to be 1, otherwise all 0-s is a solution
+                row.back() = v[i];
                 A.push_back(std::move(row));
             }
 
@@ -98,12 +101,24 @@ struct PRecursive {
                     res -= A[i][k] * solution[k];
                 solution[j] = res / A[i][j];
             }
-            rec.resize(sz);
-            for (int i = 0; i < sz; ++i) {
+            solution.insert(solution.begin(), 1);
+            rec.resize(sz + 1);
+            for (int i = 0; i <= sz; ++i) {
                 rec[i].resize(max_degree + 1);
                 for (int j = 0; j <= max_degree; ++j) {
-                    rec[i][j] = solution[i * (max_degree + 1) + j];
+                    rec[i][j] = solution[j * (sz + 1) + i];
                 }
+            }
+
+            // remove largest degrees with zeros
+            while (true) {
+                bool has_non_zero = false;
+                for (const auto& r : rec)
+                    if (r.back() != 0)
+                        has_non_zero = true;
+                if (has_non_zero) break;
+                for (auto& r : rec)
+                    r.pop_back();
             }
 
             base.assign(v.begin(), v.begin() + sz);
@@ -128,21 +143,27 @@ struct PRecursive {
     T nth(int ind) {
         while (ind >= cache.size()) {
             T res = 0;
-            for (int i = 0; i < rec.size(); ++i) {
+            for (int i = 1; i < rec.size(); ++i) {
                 T pw = 1;
                 for (int j = 0; j < rec[i].size(); ++j) {
-                    res += cache[cache.size() - 1 - i] * rec[i][j] * pw;
+                    res += cache[cache.size() - i] * rec[i][j] * pw;
                     pw *= T(cache.size());
                 }
             }
-            cache.push_back(res);
+            T den = 0;
+            T pw = 1;
+            for (int j = 0; j < rec[0].size(); ++j) {
+                den += rec[0][j] * pw;
+                pw *= T(cache.size());
+            }
+            cache.push_back(res / den);
         }
         return cache[ind];
     }
 
     void print() const {
         string recs = "";
-        for (int i = 0; i < rec.size(); ++i) {
+        auto get_poly = [&](int i) -> string {
             stringstream poly;
             for (int j = 0; j < rec[i].size(); ++j) {
                 if (rec[i][j] != 0) {
@@ -155,13 +176,17 @@ struct PRecursive {
                     }
                 }
             }
-            if (poly.str().empty()) continue;
-            string polys = "(" + poly.str() + ")*a[n-" + to_string(i + 1) + "]";
+            return poly.str();
+        };
+        for (int i = 1; i < rec.size(); ++i) {
+            string polys = get_poly(i);
+            if (polys.empty()) continue;
+            polys = "(" + polys + ")*a[n-" + to_string(i) + "]";
             if (!recs.empty()) recs += " + ";
             recs += polys;
         }
         if (recs.empty()) recs = "0";
-        cerr << "a[n] = " << recs << '\n';
+        cerr << '(' << get_poly(0) << ")*a[n] = " << recs << '\n';
         cerr << "base: [";
         for (int i = 0; i < base.size(); ++i) {
             if (i) cerr << ", ";
