@@ -137,7 +137,7 @@ struct PRecursive {
     }
     template<typename U>
     void find_recurrence(const vector<U> &v, int max_degree, int validate = 0) {
-        find_recurrence(vector<T>(v.begin(), v.end()), max_degree);
+        find_recurrence(vector<T>(v.begin(), v.end()), max_degree, validate);
     }
 
     T nth(int ind) {
