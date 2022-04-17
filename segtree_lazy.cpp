@@ -36,6 +36,11 @@ struct segtree {
     }
 
     template<typename T>
+    segtree(const vector<T>& v) {
+        build(v);
+    }
+
+    template<typename T>
     void build(const vector<T> &v, int i, int l, int r) {
         if (l == r) {
             tree[i].init(v[l], l, r);
@@ -50,7 +55,7 @@ struct segtree {
     template<typename T>
     void build(const vector<T> &v) {
         n = v.size();
-        tree.resize(1 << (__lg(max(1, n - 1)) + 2));
+        tree.assign(1 << (__lg(max(1, n - 1)) + 2), item());
         build(v, 0, 0, n - 1);
     }
 
