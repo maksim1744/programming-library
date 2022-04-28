@@ -76,7 +76,7 @@ struct Sieve {
                     primes.push_back(i);
 
         if (gen_mn) {
-            mn.resize(n + 1);
+            mn.assign(n + 1, -1);
             for (int i = 2; i <= n; ++i) {
                 if (isp[i]) {
                     mn[i] = i;
