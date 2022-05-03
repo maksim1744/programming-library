@@ -10,11 +10,9 @@ struct Sieve {
         }
 
         void step() {
-            show(num);
             prime = sieve.mn[num];
             count = 0;
             while (num != 1 && sieve.mn[num] == prime) {
-                show(num, sieve.mn[num]);
                 num /= sieve.mn[num];
                 ++count;
             }
