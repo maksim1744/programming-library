@@ -38,6 +38,7 @@ struct Sieve {
     struct PrimeIteratorContainer {
         int num;
         const Sieve& sieve;
+        using iterator = PrimeIterator;
 
         PrimeIteratorContainer(int num, const Sieve& sieve) : num(num), sieve(sieve) {}
 
@@ -47,6 +48,75 @@ struct Sieve {
 
         PrimeIterator end() const {
             return PrimeIterator(1, sieve);
+        }
+
+        vector<pair<int, int>> collect() const {
+            vector<pair<int, int>> result;
+            for (auto p : *this)
+                result.push_back(p);
+            return result;
+        }
+    };
+
+    template<typename U, typename V>
+    struct DoubleIterator {
+        U u;
+        V v;
+        U::iterator uit;
+        V::iterator vit;
+        int prime;
+        int count;
+
+        DoubleIterator(const U& u, const V& v, U::iterator uit, V::iterator vit) : u(u), v(v), uit(uit), vit(vit) {
+            tie(prime, count) = this->operator*();
+        }
+
+        DoubleIterator& operator ++ () {
+            if (uit == u.end()) {
+                ++vit;
+            } else if (vit == v.end()) {
+                ++uit;
+            } else if ((*uit).first < (*vit).first) {
+                ++uit;
+            } else if ((*uit).first > (*vit).first) {
+                ++vit;
+            } else {
+                ++uit;
+                ++vit;
+            }
+            return *this;
+        }
+
+        bool operator == (const DoubleIterator& other) const {
+            return tie(uit, vit) == tie(other.uit, other.vit);
+        }
+        bool operator != (const DoubleIterator& other) const {
+            return !(*this == other);
+        }
+
+        pair<int, int> operator * () const {
+            if (uit == u.end()) return *vit;
+            if (vit == v.end()) return *uit;
+            if ((*uit).first < (*vit).first) return *uit;
+            if ((*uit).first > (*vit).first) return *vit;
+            return {(*uit).first, (*uit).second + (*vit).second};
+        }
+    };
+
+    template<typename U, typename V>
+    struct DoubleIteratorContainer {
+        using iterator = DoubleIterator<U, V>;
+        U u;
+        V v;
+
+        DoubleIteratorContainer(const U& u, const V& v) : u(u), v(v) {}
+
+        iterator begin() const {
+            return iterator(u, v, u.begin(), v.begin());
+        }
+
+        iterator end() const {
+            return iterator(u, v, u.end(), v.end());
         }
 
         vector<pair<int, int>> collect() const {
@@ -98,8 +168,14 @@ struct Sieve {
     // can be used as vector<pair<int, int>>, as in function phi() below
     // except doesn't create a vector to avoid heap allocations
     // can be transformed into vector<pair<int, int>> with .collect()
-    PrimeIteratorContainer get_prime_divs(int k) const {
-        return PrimeIteratorContainer(k, *this);
+    auto get_prime_divs(int p) const {
+        return PrimeIteratorContainer(p, *this);
+    }
+
+    // if you want to get prime divs for n = a * b * c where max(a, b, c) < size(sieve), then call get_prime_divs(a, b, c)
+    template<typename... Args>
+    auto get_prime_divs(int p, Args... args) const {
+        return DoubleIteratorContainer(PrimeIteratorContainer(p, *this), get_prime_divs(args...));
     }
 
     int phi(int n) const {
