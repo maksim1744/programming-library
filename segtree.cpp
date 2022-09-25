@@ -1,5 +1,7 @@
 namespace segtree {
 
+// This implementation is disgusting, but it seems to work and do it faster than previous version.
+
 template<typename Item>
 Item tree_merge(const Item& a, const Item& b) {
     Item i;
@@ -32,6 +34,70 @@ struct Pusher<Item, false> {
         return tree_merge(resl, resr);
     }
     void push_point(const vector<Item>&, int, int) {}
+
+    template<typename P>
+    int lower_bound(const vector<Item>& tree, int n, int l, P p) {
+        Item cur;
+        if (p(cur)) return l - 1;
+        l |= n;
+        int r = n | (n - 1);
+        // carefully go up
+        while (true) {
+            if (p(tree_merge(cur, tree[l]))) {
+                break;
+            }
+            if (l == r) return n;
+            if (l & 1) {
+                cur = tree_merge(cur, tree[l]);
+                ++l;
+            }
+            l >>= 1;
+            r >>= 1;
+        }
+
+        // usual descent from l
+        while (l < n) {
+            if (p(tree_merge(cur, tree[l * 2]))) {
+                l = l * 2;
+            } else {
+                cur = tree_merge(cur, tree[l * 2]);
+                l = l * 2 + 1;
+            }
+        }
+        return (l ^ n);
+    }
+
+    template<typename P>
+    int lower_bound_rev(const vector<Item>& tree, int n, int r, P p) {
+        Item cur;
+        if (p(cur)) return r + 1;
+        r |= n;
+        int l = n;
+        // carefully go up
+        while (true) {
+            if (p(tree_merge(tree[r], cur))) {
+                break;
+            }
+            if (l == r) return -1;
+            if (!(r & 1)) {
+                cur = tree_merge(tree[r], cur);
+                --r;
+            }
+            l >>= 1;
+            r >>= 1;
+        }
+
+        // usual descent from r
+        while (r < n) {
+            if (p(tree_merge(tree[r * 2 + 1], cur))) {
+                r = r * 2 + 1;
+            } else {
+                cur = tree_merge(tree[r * 2 + 1], cur);
+                r = r * 2;
+            }
+        }
+        return (r ^ n);
+    }
 };
 
 template<typename Item>
@@ -116,6 +182,80 @@ struct Pusher<Item, true> {
             }
         }
     }
+
+    template<typename P>
+    pair<int, Item> _lower_bound(vector<Item>& tree, int l, P p, Item cur, int i, int vl, int vr) {
+        if (vl == vr) {
+            if (p(tree_merge(cur, tree[i]))) {
+                return {vl, tree[i]};
+            } else {
+                return {vl + 1, tree[i]};
+            }
+        }
+
+        push(tree, i, vl, vr);
+        int m = (vl + vr) / 2;
+        if (l > m) {
+            return _lower_bound(tree, l, p, cur, i * 2 + 1, m + 1, vr);
+        } else if (l <= vl) {
+            if (!p(tree_merge(cur, tree[i]))) {
+                return {vr + 1, tree_merge(cur, tree[i])};
+            }
+            if (p(tree_merge(cur, tree[i * 2]))) {
+                return _lower_bound(tree, l, p, cur, i * 2, vl, m);
+            } else {
+                return _lower_bound(tree, l, p, tree_merge(cur, tree[i * 2]), i * 2 + 1, m + 1, vr);
+            }
+        } else {
+            auto [ind, it] = _lower_bound(tree, l, p, cur, i * 2, vl, m);
+            if (ind <= m) return {ind, it};
+            return _lower_bound(tree, l, p, it, i * 2 + 1, m + 1, vr);
+        }
+    }
+
+    template<typename P>
+    int lower_bound(vector<Item>& tree, int n, int l, P p) {
+        Item cur;
+        if (p(cur)) return l - 1;
+        return _lower_bound(tree, l, p, cur, 1, 0, n - 1).first;
+    }
+
+    template<typename P>
+    pair<int, Item> _lower_bound_rev(vector<Item>& tree, int r, P p, Item cur, int i, int vl, int vr) {
+        if (vl == vr) {
+            if (p(tree_merge(tree[i], cur))) {
+                return {vl, tree[i]};
+            } else {
+                return {vl - 1, tree[i]};
+            }
+        }
+
+        push(tree, i, vl, vr);
+        int m = (vl + vr) / 2;
+        if (r <= m) {
+            return _lower_bound_rev(tree, r, p, cur, i * 2, vl, m);
+        } else if (r >= vr) {
+            if (!p(tree_merge(tree[i], cur))) {
+                return {vl - 1, tree_merge(cur, tree[i])};
+            }
+            if (p(tree_merge(tree[i * 2 + 1], cur))) {
+                return _lower_bound_rev(tree, r, p, cur, i * 2 + 1, m + 1, vr);
+            } else {
+                return _lower_bound_rev(tree, r, p, tree_merge(tree[i * 2 + 1], cur), i * 2, vl, m);
+            }
+        } else {
+            auto [ind, it] = _lower_bound_rev(tree, r, p, cur, i * 2 + 1, m + 1, vr);
+            if (ind > m) return {ind, it};
+            return _lower_bound_rev(tree, r, p, it, i * 2, vl, m);
+        }
+    }
+
+    template<typename P>
+    int lower_bound_rev(vector<Item>& tree, int n, int r, P p) {
+        Item cur;
+        if (p(cur)) return r + 1;
+        return _lower_bound_rev(tree, r, p, cur, 1, 0, n - 1).first;
+    }
 };
 
 template<typename Item, bool lazy = false>
@@ -123,6 +263,7 @@ struct Segtree {
     vector<Item> tree;
     Pusher<Item, lazy> pusher;
     int n;
+    int n0;
 
     Segtree(int n = 0) {
         build(n);
@@ -134,6 +275,7 @@ struct Segtree {
     }
 
     void build(int n) {
+        this->n0 = n;
         while (n & (n - 1)) ++n;
         this->n = n;
         tree.assign(n * 2, {});
@@ -278,6 +420,24 @@ struct Segtree {
             i >>= 1;
         }
     }
+
+    // first index r such that p(tree.ask(l, r)) == true
+    // if p() is true for empty item, return l-1
+    // if p() is never true, returns n
+    template<typename P>
+    int lower_bound(int l, P p) {
+        l = max(l, 0);
+        if (l >= n0) return n0;
+        return min(n0, pusher.lower_bound(tree, n, l, p));
+    }
+
+    // similarly to lower_bound, returns first (largest) l such that p(tree.ask(l, r)) == true
+    template<typename P>
+    int lower_bound_rev(int r, P p) {
+        r = min(r, n0 - 1);
+        if (r < 0) return -1;
+        return pusher.lower_bound_rev(tree, n, r, p);
+    }
 };
 
 }
@@ -292,10 +452,12 @@ struct Item {
     }
 
     //// similar to init, but more convenient for doing a[i] += x, implement only if needed
-    // template<typename T> void update(const T& t, int ind) {}
+    // template<typename T>
+    // void update(const T& t, int ind) {}
 
     //// apply here, save for children
-    // template<typename T> void modify(const T& m, int l, int r) {}
+    // template<typename T>
+    // void modify(const T& m, int l, int r) {}
 
     // void push(Item& a, Item& b, int l, int r) {
     //     int m = (l + r) / 2;
