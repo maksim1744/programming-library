@@ -44,9 +44,9 @@ struct PRecursive {
     void find_recurrence(const vector<T>& v, int max_degree, int validate = 0) {
         // just gaussian elimination
         for (int sz = 0;; ++sz) {
-            vector<vector<Mint>> A;
+            vector<vector<T>> A;
             for (int i = sz; i + validate < v.size(); ++i) {
-                vector<Mint> row((sz + 1) * (max_degree + 1) + 1);
+                vector<T> row((sz + 1) * (max_degree + 1) + 1);
                 row.back() = 0;
                 for (int j = 0; j <= sz; ++j) {
                     T pw = 1;
