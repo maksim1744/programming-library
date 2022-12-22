@@ -47,7 +47,6 @@ struct PRecursive {
             vector<vector<T>> A;
             for (int i = sz; i + validate < v.size(); ++i) {
                 vector<T> row((sz + 1) * (max_degree + 1) + 1);
-                row.back() = 0;
                 for (int j = 0; j <= sz; ++j) {
                     T pw = 1;
                     for (int k = 0; k <= max_degree; ++k) {
@@ -55,8 +54,10 @@ struct PRecursive {
                         pw *= i;
                     }
                 }
-                row.erase(row.begin()); // some element in denominator has to be 1, otherwise all 0-s is a solution
-                row.back() = v[i];
+                // largest degree in denominator has to be 1, otherwise all 0-s is a solution
+                swap(row[max_degree * (sz + 1)], row.back());
+                row.back() = -row.back();
+                row.erase(row.begin() + max_degree * (sz + 1));
                 A.push_back(std::move(row));
             }
 
@@ -101,7 +102,7 @@ struct PRecursive {
                     res -= A[i][k] * solution[k];
                 solution[j] = res / A[i][j];
             }
-            solution.insert(solution.begin(), 1);
+            solution.insert(solution.begin() + max_degree * (sz + 1), 1);
             rec.resize(sz + 1);
             for (int i = 0; i <= sz; ++i) {
                 rec[i].resize(max_degree + 1);
